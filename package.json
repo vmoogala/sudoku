@@ -1,0 +1,19 @@
+{
+  "name": "sudoku",
+  "version": "1.0.0",
+  "description": "sudoku",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vmoogala/sudoku.git"
+  },
+  "author": "vmoogala",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vmoogala/sudoku/issues"
+  },
+  "homepage": "https://github.com/vmoogala/sudoku#readme"
+}
