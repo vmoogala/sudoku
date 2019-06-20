@@ -32,15 +32,28 @@ const checkInGrid = (gridNum, num) => {
 
 const ifNumberExistsInRow = (rowNum, num) => {
   // Should return true if number exists in a specific row
+  return data[rowNum].includes(num);
 };
 
 const ifNumberExistsInColumn = (colNum, num) => {
   // Should return true if number exists in a specific column
+  return getColumnValues(colNum).includes(num);
 };
 
 const ifNumberExistsInGrid = (gridNum, num) => {
   // Should return true if number exists in a specific grid
+  return getGridValues(gridNum).includes(num);
 };
+
+const getColumnValues = colNum => {
+  let arr = [];
+  data.forEach(d => {
+    arr.push(d[colNum]);
+  });
+  return arr;
+};
+
+const getGridValues = gridNum => {};
 
 const fillNumberInSudoku = (num, rowNum, colNum) => {
   // Fill the number
@@ -69,7 +82,6 @@ const initializeNumberCount = data => {
 
 const solveSudoku = data => {
   initializeNumberCount(data);
-  console.log(numberCount);
 };
 
 solveSudoku(data);
