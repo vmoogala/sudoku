@@ -18,6 +18,32 @@ let numberCount = {
   "9": 9
 };
 
+// Same logic as above. To track the number of elements in each row
+let rowCount = {
+  "0": 9,
+  "1": 9,
+  "2": 9,
+  "3": 9,
+  "4": 9,
+  "5": 9,
+  "6": 9,
+  "7": 9,
+  "8": 9
+};
+
+// Same logic as above. To track the number of elements in each column
+let columnCount = {
+  "0": 9,
+  "1": 9,
+  "2": 9,
+  "3": 9,
+  "4": 9,
+  "5": 9,
+  "6": 9,
+  "7": 9,
+  "8": 9
+};
+
 const checkInRow = (rowNum, num) => {
   // Should check and fill numbers in a specific row
 };
@@ -45,6 +71,10 @@ const ifNumberExistsInGrid = (gridNum, num) => {
   return getGridValues(gridNum).includes(num);
 };
 
+const getRowValues = rowNum => {
+  return data[rowNum];
+};
+
 const getColumnValues = colNum => {
   let arr = [];
   data.forEach(d => {
@@ -60,6 +90,14 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
   // Reduce the count for the number
   // If the count is 1, invoke logic to fill the last available space
   // If the count is 0, remove it from remaining numbers
+
+  if (--rowCount[rowNum] == 1) {
+    //fill the remaining number in that row
+  }
+
+  if (--columnCount[colNum] == 1) {
+    //fill the remaining number in that column
+  }
 };
 
 const initializeNumberCount = data => {
@@ -80,8 +118,37 @@ const initializeNumberCount = data => {
   delete numberCount["0"];
 };
 
-const solveSudoku = data => {
+const initializeRowCount = data => {
+  // This will initialize the row count based on the given question
+
+  data.forEach((row, rowNum) => {
+    row.forEach(num => {
+      if (num !== 0) {
+        rowCount[rowNum]--;
+      }
+    });
+  });
+};
+
+const initializeColumnCount = () => {
+  [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(colNum => {
+    getColumnValues(colNum).forEach(num => {
+      if (num !== 0) {
+        columnCount[colNum]--;
+      }
+    });
+  });
+};
+
+const initializeSetup = data => {
   initializeNumberCount(data);
+  initializeRowCount(data);
+  initializeColumnCount();
+};
+
+const solveSudoku = data => {
+  initializeSetup(data);
+  console.log(getGridValues());
 };
 
 solveSudoku(data);
