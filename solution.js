@@ -83,7 +83,35 @@ const getColumnValues = colNum => {
   return arr;
 };
 
-const getGridValues = gridNum => {};
+const getRowValuesForAGrid = (rowNum, gridNum, arr) => {
+  let arrValues = getRowValues(rowNum);
+  if (gridNum % 3 === 0) {
+    arr.push(arrValues.slice(0, 3));
+  } else if (gridNum % 3 === 1) {
+    arr.push(arrValues.slice(3, 6));
+  } else if (gridNum % 3 === 2) {
+    arr.push(arrValues.slice(6));
+  }
+};
+
+const getGridValues = gridNum => {
+  let arr = [];
+
+  if (gridNum < 3) {
+    [0, 1, 2].forEach(d => {
+      getRowValuesForAGrid(d, gridNum, arr);
+    });
+  } else if (gridNum < 6) {
+    [3, 4, 5].forEach(d => {
+      getRowValuesForAGrid(d, gridNum, arr);
+    });
+  } else if (gridNum < 9) {
+    [6, 7, 8].forEach(d => {
+      getRowValuesForAGrid(d, gridNum, arr);
+    });
+  }
+  return arr;
+};
 
 const fillNumberInSudoku = (num, rowNum, colNum) => {
   // Fill the number
@@ -148,7 +176,6 @@ const initializeSetup = data => {
 
 const solveSudoku = data => {
   initializeSetup(data);
-  console.log(getGridValues());
 };
 
 solveSudoku(data);
