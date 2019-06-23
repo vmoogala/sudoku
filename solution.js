@@ -2,6 +2,9 @@ const data = require("./question.js");
 
 // To track which numbers are left to fill in sudoku
 let remainingNumbers = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+const remainingRows = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+const remainingColumns = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+const remainingGrids = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 // To track the number of spaces left to fill by each number
 // When this is "1", fill the last available space
@@ -55,18 +58,6 @@ let gridCount = {
   "6": 9,
   "7": 9,
   "8": 9
-};
-
-const checkInRow = (rowNum, num) => {
-  // Should check and fill numbers in a specific row
-};
-
-const checkInColumn = (colNum, num) => {
-  // Should check and fill numbers in a specific column
-};
-
-const checkInGrid = (gridNum, num) => {
-  // Should check and fill numbers in a specific grid
 };
 
 const ifNumberExistsInRow = (rowNum, num) => {
@@ -123,7 +114,7 @@ const getGridValues = gridNum => {
       getRowValuesForAGrid(d, gridNum, arr);
     });
   }
-  return arr;
+  return arr.flat();
 };
 
 const getGridNumberFromRowCoumnNumbers = (rowNum, colNum) => {
@@ -159,6 +150,12 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
   // Reduce the count for the number
   // If the count is 1, invoke logic to fill the last available space
   // If the count is 0, remove it from remaining numbers
+
+  if (data[rowNum][colNum] === 0) {
+    data[rowNum][colNum] = num;
+    console.log(`filled number ${num} in row ${rowNum}, column ${colNum}`);
+    console.log(data);
+  }
 
   if (--numberCount[num] == 1) {
     //remove the number from remainingNumbers
@@ -224,13 +221,11 @@ const initializeColumnCount = () => {
 
 const initializeGridCount = () => {
   [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(gridNum => {
-    getGridValues(gridNum)
-      .flat()
-      .forEach(num => {
-        if (num !== 0) {
-          gridCount[gridNum]--;
-        }
-      });
+    getGridValues(gridNum).forEach(num => {
+      if (num !== 0) {
+        gridCount[gridNum]--;
+      }
+    });
   });
 };
 
@@ -243,6 +238,106 @@ const initializeSetup = data => {
 
 const solveSudoku = data => {
   initializeSetup(data);
+  checkAllRowsForRemainingNumbers();
+};
+
+const getPossibleGridNumbersFromRowNumber = rowNum => {
+  if (rowNum < 3) {
+    return [0, 1, 2];
+  } else if (rowNum < 6) {
+    return [3, 4, 5];
+  } else if (rowNum < 9) {
+    return [6, 7, 8];
+  }
+};
+
+const getPossibleRowNumbersFromGridNumber = gridNum => {
+  if ([0, 3, 6].includes(gridNum)) {
+    return [0, 1, 2];
+  } else if ([1, 4, 7].includes(gridNum)) {
+    return [3, 4, 5];
+  } else if ([2, 5, 8].includes(gridNum)) {
+    return [6, 7, 8];
+  }
+};
+
+const getEmptyPositionsFromRow = rowNum => {
+  let arr = [];
+  getRowValues(rowNum).forEach((d, i) => {
+    if (d === 0) {
+      arr.push(i);
+    }
+  });
+  return arr;
+};
+
+function removeElementsFromArray(arr, elements) {
+  return arr.filter(num => !elements.includes(num));
+}
+
+/**
+ * Should check and fill numbers in a specific row
+ * @param {*} rowNum
+ * @param {*} num
+ */
+const checkInRow = (rowNum, num) => {
+  if (!ifNumberExistsInRow(rowNum, num)) {
+    let emptyPositions = getEmptyPositionsFromRow(rowNum);
+
+    // Check in grids first if number is present.
+    // If yes, remove the specific positions from emptyPositions
+
+    currentGridsForRow = getPossibleGridNumbersFromRowNumber(rowNum);
+
+    currentGridsForRow.forEach(gridNum => {
+      if (ifNumberExistsInGrid(gridNum, num)) {
+        emptyPositions = removeElementsFromArray(
+          emptyPositions,
+          getPossibleRowNumbersFromGridNumber(gridNum)
+        );
+      }
+    });
+
+    let elemToBeRemoved = [];
+
+    // Check in columns now for empty positions available
+    emptyPositions.forEach(d => {
+      if (ifNumberExistsInColumn(d, num)) {
+        elemToBeRemoved.push(d);
+      }
+    });
+
+    emptyPositions = removeElementsFromArray(emptyPositions, elemToBeRemoved);
+
+    console.log(rowNum, num, emptyPositions);
+
+    // Fill the number in Sudoku if there is only one possibility
+    if (emptyPositions.length == 1) {
+      fillNumberInSudoku(num, rowNum, emptyPositions[0]);
+    }
+  }
+};
+
+/**
+ * Should check and fill numbers in a specific column
+ * @param {*} colNum
+ * @param {*} num
+ */
+const checkInColumn = (colNum, num) => {};
+
+/**
+ * Should check and fill numbers in a specific grid
+ * @param {*} gridNum
+ * @param {*} num
+ */
+const checkInGrid = (gridNum, num) => {};
+
+const checkAllRowsForRemainingNumbers = () => {
+  remainingNumbers.forEach(num => {
+    remainingRows.forEach(rowNum => {
+      checkInRow(rowNum, num);
+    });
+  });
 };
 
 solveSudoku(data);
