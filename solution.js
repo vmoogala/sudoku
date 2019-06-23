@@ -44,6 +44,19 @@ let columnCount = {
   "8": 9
 };
 
+// Same logic as above. To track the number of elements in each grid
+let gridCount = {
+  "0": 9,
+  "1": 9,
+  "2": 9,
+  "3": 9,
+  "4": 9,
+  "5": 9,
+  "6": 9,
+  "7": 9,
+  "8": 9
+};
+
 const checkInRow = (rowNum, num) => {
   // Should check and fill numbers in a specific row
 };
@@ -113,11 +126,47 @@ const getGridValues = gridNum => {
   return arr;
 };
 
+const getGridNumberFromRowCoumnNumbers = (rowNum, colNum) => {
+  if (rowNum < 3) {
+    if (colNum < 3) {
+      return 0;
+    } else if (colNum < 6) {
+      return 1;
+    } else if (colNum < 9) {
+      return 2;
+    }
+  } else if (rowNum < 6) {
+    if (colNum < 3) {
+      return 3;
+    } else if (colNum < 6) {
+      return 4;
+    } else if (colNum < 9) {
+      return 5;
+    }
+  } else if (rowNum < 9) {
+    if (colNum < 3) {
+      return 6;
+    } else if (colNum < 6) {
+      return 7;
+    } else if (colNum < 9) {
+      return 8;
+    }
+  }
+};
+
 const fillNumberInSudoku = (num, rowNum, colNum) => {
   // Fill the number
   // Reduce the count for the number
   // If the count is 1, invoke logic to fill the last available space
   // If the count is 0, remove it from remaining numbers
+
+  if (--numberCount[num] == 1) {
+    //remove the number from remainingNumbers
+  }
+
+  if (--numberCount[num] == 0) {
+    remainingNumbers.delete(num);
+  }
 
   if (--rowCount[rowNum] == 1) {
     //fill the remaining number in that row
@@ -125,6 +174,11 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
 
   if (--columnCount[colNum] == 1) {
     //fill the remaining number in that column
+  }
+
+  let currentGridNum = getGridNumberFromRowCoumnNumbers(rowNum, colNum);
+  if (--gridCount[currentGridNum] == 1) {
+    //remove the remaining number in the grid
   }
 };
 
@@ -168,10 +222,23 @@ const initializeColumnCount = () => {
   });
 };
 
+const initializeGridCount = () => {
+  [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(gridNum => {
+    getGridValues(gridNum)
+      .flat()
+      .forEach(num => {
+        if (num !== 0) {
+          gridCount[gridNum]--;
+        }
+      });
+  });
+};
+
 const initializeSetup = data => {
   initializeNumberCount(data);
   initializeRowCount(data);
   initializeColumnCount();
+  initializeGridCount();
 };
 
 const solveSudoku = data => {
