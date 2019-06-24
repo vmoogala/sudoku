@@ -6,6 +6,8 @@ const remainingRows = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const remainingColumns = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const remainingGrids = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
+let noOfRemainingElementsToFill;
+
 // To track the number of spaces left to fill by each number
 // When this is "1", fill the last available space
 // When this is "0" remove the current number from "remainingNumbers"
@@ -87,17 +89,6 @@ const getColumnValues = colNum => {
   return arr;
 };
 
-const getRowValuesForAGrid = (rowNum, gridNum, arr) => {
-  let arrValues = getRowValues(rowNum);
-  if (gridNum % 3 === 0) {
-    arr.push(arrValues.slice(0, 3));
-  } else if (gridNum % 3 === 1) {
-    arr.push(arrValues.slice(3, 6));
-  } else if (gridNum % 3 === 2) {
-    arr.push(arrValues.slice(6));
-  }
-};
-
 const getGridValues = gridNum => {
   let arr = [];
 
@@ -115,6 +106,17 @@ const getGridValues = gridNum => {
     });
   }
   return arr.flat();
+};
+
+const getRowValuesForAGrid = (rowNum, gridNum, arr) => {
+  let arrValues = getRowValues(rowNum);
+  if (gridNum % 3 === 0) {
+    arr.push(arrValues.slice(0, 3));
+  } else if (gridNum % 3 === 1) {
+    arr.push(arrValues.slice(3, 6));
+  } else if (gridNum % 3 === 2) {
+    arr.push(arrValues.slice(6));
+  }
 };
 
 const getGridNumberFromRowCoumnNumbers = (rowNum, colNum) => {
@@ -159,47 +161,57 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
     console.log(
       `before counts are number: ${numberCount[num]}, row: ${
         rowCount[rowNum]
-      }, column: ${columnCount[colNum]}, grid: ${gridCount[currentGridNum]}`
+      }, column: ${columnCount[colNum]}, grid: ${
+        gridCount[currentGridNum]
+      }, remaining: ${noOfRemainingElementsToFill}`
     );
+
+    numberCount[num]--;
+    rowCount[rowNum]--;
+    columnCount[colNum]--;
+    gridCount[currentGridNum]--;
+    noOfRemainingElementsToFill--;
+
+    console.log(
+      `after counts are number: ${numberCount[num]}, row ${
+        rowCount[rowNum]
+      }, column ${columnCount[colNum]}, grid: ${
+        gridCount[currentGridNum]
+      }, remaining: ${noOfRemainingElementsToFill}`
+    );
+
+    if (numberCount[num] === 1) {
+      console.log(`filling the number ${num} at the last location`);
+      checkEverywhereForANumber(num);
+    } else if (numberCount[num] === 0) {
+      console.log(`deleting the number ${num} from remaining numbers`);
+      remainingNumbers.delete(num);
+    }
+
+    if (rowCount[rowNum] == 1) {
+      //fill the remaining number in that row
+      console.log(`\nfilling the last number in the row ${rowNum}`);
+      remainingNumbers.forEach(num => {
+        checkInRow(rowNum, num);
+      });
+    }
+
+    if (columnCount[colNum] == 1) {
+      //fill the remaining number in that column
+      console.log(`\nfilling the last number in the column ${colNum}`);
+      remainingNumbers.forEach(num => {
+        checkInColumn(colNum, num);
+      });
+    }
+
+    if (gridCount[currentGridNum] == 1) {
+      //remove the remaining number in the grid
+      console.log(`\nfilling the last number in the grid ${currentGridNum}`);
+      remainingNumbers.forEach(num => {
+        checkInGrid(currentGridNum, num);
+      });
+    }
   }
-
-  numberCount[num]--;
-  rowCount[rowNum]--;
-  columnCount[colNum]--;
-  gridCount[currentGridNum]--;
-
-  if (numberCount[num] === 1) {
-    checkEverywhereForANumber(num);
-  } else if (numberCount[num] === 0) {
-    remainingNumbers.delete(num);
-  }
-
-  if (rowCount[rowNum] == 1) {
-    //fill the remaining number in that row
-    remainingNumbers.forEach(num => {
-      checkInRow(rowNum, num);
-    });
-  }
-
-  if (columnCount[colNum] == 1) {
-    //fill the remaining number in that column
-    remainingNumbers.forEach(num => {
-      checkInColumn(colNum, num);
-    });
-  }
-
-  if (gridCount[currentGridNum] == 1) {
-    //remove the remaining number in the grid
-    remainingNumbers.forEach(num => {
-      checkInGrid(currentGridNum, num);
-    });
-  }
-
-  console.log(
-    `after counts are number: ${numberCount[num]}, row ${
-      rowCount[rowNum]
-    }, column ${columnCount[colNum]}, grid: ${gridCount[currentGridNum]}`
-  );
 };
 
 const initializeNumberCount = data => {
@@ -252,19 +264,36 @@ const initializeGridCount = () => {
   });
 };
 
+const getRemainingNoOfElementsToFill = () => {
+  let sum = 0;
+  Object.entries(numberCount).forEach(([key, value]) => {
+    sum += value;
+  });
+  return sum;
+};
+
 const initializeSetup = data => {
   initializeNumberCount(data);
   initializeRowCount(data);
   initializeColumnCount();
   initializeGridCount();
+  noOfRemainingElementsToFill = getRemainingNoOfElementsToFill();
 };
 
 const solveSudoku = data => {
   initializeSetup(data);
+  let beforeCount;
+  do {
+    beforeCount = noOfRemainingElementsToFill;
+    doOneCycle();
+  } while (beforeCount > noOfRemainingElementsToFill);
+};
+
+function doOneCycle() {
   checkAllRowsForRemainingNumbers();
   checkAllColumnsForRemainingNumbers();
   checkAllGridsForRemainingNumbers();
-};
+}
 
 const getPossibleGridNumbersFromRowNumber = rowNum => {
   if (rowNum < 3) {
