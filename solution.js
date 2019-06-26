@@ -542,7 +542,7 @@ const checkInGrid = (gridNum, num) => {
       }
     });
 
-    if (emptyPositions.length == 1) {
+    if (emptyPositions.length === 1) {
       let [row, col] = getRowAndColumnNumFromGridNumAndPosition(
         gridNum,
         emptyPositions[0],
@@ -551,6 +551,8 @@ const checkInGrid = (gridNum, num) => {
       );
 
       fillNumberInSudoku(num, row, col);
+    } else if (emptyPositions.length === 2) {
+      checkForNumberInAdjacentSpaces(gridNum, num, emptyPositions);
     }
   }
 };
@@ -592,6 +594,80 @@ const checkEverywhereForANumber = num => {
   remainingGrids.forEach(grid => {
     checkInGrid(grid, num);
   });
+};
+
+const checkForNumberInAdjacentSpaces = (gridNum, num, emptyPositions) => {
+  console.log("\n only two possibilities");
+  console.log(gridNum, num, emptyPositions);
+
+  let pos1 = emptyPositions[0];
+  let pos2 = emptyPositions[1];
+
+  if (pos1 > pos2) {
+    [pos1, pos2] = [pos2, pos1];
+  }
+
+  let returnArr = arePossibilitiesOfNumberInAGridAreInSameRowOrColumn(
+    pos1,
+    pos2
+  );
+
+  if (returnArr[0]) {
+    if (returnArr[1] == "row") {
+      let row = getActualRowNumberFromGridNumAndGridRowNum(gridNum, pos1);
+    } else if (returnArr[1] == "column") {
+    }
+  }
+};
+
+const arePossibilitiesOfNumberInAGridAreInSameRowOrColumn = (a, b) => {
+  let flag = false;
+  let rowOrColumn;
+  let chances = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8]
+  ];
+
+  for (let i = 0; i < chances.length; i++) {
+    if (chances[i].includes(a) && chances[i].includes(b)) {
+      flag = true;
+
+      if (i < 3) {
+        rowOrColumn = "row";
+      } else {
+        rowOrColumn = "column";
+      }
+
+      break;
+    }
+  }
+
+  return [flag, rowOrColumn];
+};
+
+const getActualRowNumberFromGridNumAndGridRowNum = (gridNum, pos) => {
+  let row = 0;
+  if (gridNum < 3) {
+    row += 0;
+  } else if (gridNum < 6) {
+    row += 2;
+  } else if (gridNum < 9) {
+    row += 5;
+  }
+
+  if (pos === 0) {
+    row += 0;
+  } else if (pos === 3) {
+    row += 1;
+  } else if (pos === 6) {
+    row += 2;
+  }
+
+  return row;
 };
 
 solveSudoku(data);
