@@ -603,6 +603,7 @@ const checkForNumberInAdjacentSpaces = (gridNum, num, emptyPositions) => {
   let pos1 = emptyPositions[0];
   let pos2 = emptyPositions[1];
 
+  //might not be required
   if (pos1 > pos2) {
     [pos1, pos2] = [pos2, pos1];
   }
@@ -615,6 +616,13 @@ const checkForNumberInAdjacentSpaces = (gridNum, num, emptyPositions) => {
   if (returnArr[0]) {
     if (returnArr[1] == "row") {
       let row = getActualRowNumberFromGridNumAndGridRowNum(gridNum, pos1);
+      // Solve for the number in grids which are in same row assuming that
+      // the number cannot come in the same row as the current one
+      let adjGrids = getGridNumbersInSameRow(gridNum);
+
+      adjGrids.forEach(grid => {
+        checkForNumbernInGridByExcludingRow(num, grid, row);
+      });
     } else if (returnArr[1] == "column") {
     }
   }
@@ -654,20 +662,78 @@ const getActualRowNumberFromGridNumAndGridRowNum = (gridNum, pos) => {
   if (gridNum < 3) {
     row += 0;
   } else if (gridNum < 6) {
-    row += 2;
+    row += 3;
   } else if (gridNum < 9) {
-    row += 5;
+    row += 6;
   }
 
-  if (pos === 0) {
+  if (pos < 3) {
     row += 0;
-  } else if (pos === 3) {
+  } else if (pos < 6) {
     row += 1;
-  } else if (pos === 6) {
+  } else if (pos < 9) {
     row += 2;
   }
 
   return row;
+};
+
+//Very dirty method, should be cleaned
+const checkForNumbernInGridByExcludingRow = (num, gridNum, rowNum) => {
+  if (!ifNumberExistsInGrid(gridNum, num)) {
+    let emptyPositions = getEmptyPositionsFromGrid(gridNum);
+    let [
+      possibleRows,
+      possibleColumns
+    ] = getPossibleRowsAndColumnsFromGridNumber(gridNum);
+
+    possibleRows.forEach(row => {
+      if (ifNumberExistsInRow(row, num)) {
+        emptyPositions = removeElementsFromArray(
+          emptyPositions,
+          getNumbersToRemoveBasedOnRow(row)
+        );
+      }
+    });
+
+    emptyPositions = removeElementsFromArray(
+      emptyPositions,
+      getNumbersToRemoveBasedOnRow(rowNum)
+    );
+
+    possibleColumns.forEach(col => {
+      if (ifNumberExistsInColumn(col, num)) {
+        emptyPositions = removeElementsFromArray(
+          emptyPositions,
+          getNumbersToRemoveBasedOnColumn(col)
+        );
+      }
+    });
+
+    if (emptyPositions.length === 1) {
+      let [row, col] = getRowAndColumnNumFromGridNumAndPosition(
+        gridNum,
+        emptyPositions[0],
+        possibleRows,
+        possibleColumns
+      );
+
+      fillNumberInSudoku(num, row, col);
+    }
+  }
+};
+
+const getGridNumbersInSameRow = gridNum => {
+  let arr;
+  if ([0, 1, 2].includes(gridNum)) {
+    arr = [0, 1, 2];
+  } else if ([3, 4, 5].includes(gridNum)) {
+    arr = [3, 4, 5];
+  } else if ([6, 7, 8].includes(gridNum)) {
+    arr = [6, 7, 8];
+  }
+
+  return arr.filter(num => num !== gridNum);
 };
 
 solveSudoku(data);
