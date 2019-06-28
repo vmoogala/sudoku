@@ -2,14 +2,17 @@ const data = require("./question.js");
 
 // To track which numbers are left to fill in sudoku
 let remainingNumbers = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+// To track which rows/columns/grids to be filled
 const remainingRows = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const remainingColumns = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const remainingGrids = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
+// To trigger a new cycle of row/column/grid checking whenever this count decreases
 let noOfRemainingElementsToFill;
 
 // To track the number of spaces left to fill by each number
-// When this is "1", fill the last available space
+// When this is "1", fill the last space to be filled by that number
 // When this is "0" remove the current number from "remainingNumbers"
 let numberCount = {
   "1": 9,
@@ -108,6 +111,7 @@ const getGridValues = gridNum => {
   return arr.flat();
 };
 
+//Helper Function
 const getRowValuesForAGrid = (rowNum, gridNum, arr) => {
   let arrValues = getRowValues(rowNum);
   if (gridNum % 3 === 0) {
@@ -119,7 +123,7 @@ const getRowValuesForAGrid = (rowNum, gridNum, arr) => {
   }
 };
 
-const getGridNumberFromRowCoumnNumbers = (rowNum, colNum) => {
+const getGridNumberFromRowColumnNumbers = (rowNum, colNum) => {
   if (rowNum < 3) {
     if (colNum < 3) {
       return 0;
@@ -152,7 +156,7 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
   // Reduce the count for the number
   // If the count is 1, invoke logic to fill the last available space
   // If the count is 0, remove it from remaining numbers
-  let currentGridNum = getGridNumberFromRowCoumnNumbers(rowNum, colNum);
+  let currentGridNum = getGridNumberFromRowColumnNumbers(rowNum, colNum);
 
   if (data[rowNum][colNum] === 0) {
     data[rowNum][colNum] = num;
@@ -264,14 +268,6 @@ const initializeGridCount = () => {
   });
 };
 
-const getRemainingNoOfElementsToFill = () => {
-  let sum = 0;
-  Object.entries(numberCount).forEach(([key, value]) => {
-    sum += value;
-  });
-  return sum;
-};
-
 const initializeSetup = data => {
   initializeNumberCount(data);
   initializeRowCount(data);
@@ -279,6 +275,12 @@ const initializeSetup = data => {
   initializeGridCount();
   noOfRemainingElementsToFill = getRemainingNoOfElementsToFill();
 };
+
+function doOneCycle() {
+  checkAllRowsForRemainingNumbers();
+  checkAllColumnsForRemainingNumbers();
+  checkAllGridsForRemainingNumbers();
+}
 
 const solveSudoku = data => {
   initializeSetup(data);
@@ -289,11 +291,13 @@ const solveSudoku = data => {
   } while (beforeCount > noOfRemainingElementsToFill);
 };
 
-function doOneCycle() {
-  checkAllRowsForRemainingNumbers();
-  checkAllColumnsForRemainingNumbers();
-  checkAllGridsForRemainingNumbers();
-}
+const getRemainingNoOfElementsToFill = () => {
+  let sum = 0;
+  Object.entries(numberCount).forEach(([key, value]) => {
+    sum += value;
+  });
+  return sum;
+};
 
 const getPossibleGridNumbersFromRowNumber = rowNum => {
   if (rowNum < 3) {
@@ -596,9 +600,14 @@ const checkEverywhereForANumber = num => {
   });
 };
 
+/**
+ * If a grid has a possibility of a number on the same row or column,
+ * check for that number in adjacent grids/rows and columns
+ */
 const checkForNumberInAdjacentSpaces = (gridNum, num, emptyPositions) => {
-  console.log("\n only two possibilities");
-  console.log(gridNum, num, emptyPositions);
+  console.log(
+    `only two possibilities for ${num} in ${gridNum}. positions: ${emptyPositions}`
+  );
 
   let pos1 = emptyPositions[0];
   let pos2 = emptyPositions[1];
@@ -621,9 +630,17 @@ const checkForNumberInAdjacentSpaces = (gridNum, num, emptyPositions) => {
       let adjGrids = getGridNumbersInSameRow(gridNum);
 
       adjGrids.forEach(grid => {
-        checkForNumbernInGridByExcludingRow(num, grid, row);
+        checkForNumbernInGridByExcludingRowOrColumn("row", num, grid, row);
       });
     } else if (returnArr[1] == "column") {
+      let col = getActualColumnNumberFromGridNumAndGridRowNum(gridNum, pos1);
+      // Solve for the number in grids which are in same column assuming that
+      // the number cannot come in the same column as the current one
+      let adjGrids = getGridNumbersInSameColumn(gridNum);
+
+      adjGrids.forEach(grid => {
+        checkForNumbernInGridByExcludingRowOrColumn("column", num, grid, col);
+      });
     }
   }
 };
@@ -678,8 +695,35 @@ const getActualRowNumberFromGridNumAndGridRowNum = (gridNum, pos) => {
   return row;
 };
 
+const getActualColumnNumberFromGridNumAndGridRowNum = (gridNum, pos) => {
+  let col = 0;
+
+  if ([0, 3, 6].includes(gridNum)) {
+    col += 0;
+  } else if ([1, 4, 7].includes(gridNum)) {
+    col += 3;
+  } else if ([2, 5, 8].includes(gridNum)) {
+    col += 6;
+  }
+
+  if ([0, 3, 6].includes(pos)) {
+    col += 0;
+  } else if ([1, 4, 7].includes(pos)) {
+    col += 1;
+  } else if ([2, 5, 8].includes(pos)) {
+    col += 2;
+  }
+
+  return col;
+};
+
 //Very dirty method, should be cleaned
-const checkForNumbernInGridByExcludingRow = (num, gridNum, rowNum) => {
+const checkForNumbernInGridByExcludingRowOrColumn = (
+  rowOrColumn,
+  num,
+  gridNum,
+  rowOrColumnNum
+) => {
   if (!ifNumberExistsInGrid(gridNum, num)) {
     let emptyPositions = getEmptyPositionsFromGrid(gridNum);
     let [
@@ -696,11 +740,6 @@ const checkForNumbernInGridByExcludingRow = (num, gridNum, rowNum) => {
       }
     });
 
-    emptyPositions = removeElementsFromArray(
-      emptyPositions,
-      getNumbersToRemoveBasedOnRow(rowNum)
-    );
-
     possibleColumns.forEach(col => {
       if (ifNumberExistsInColumn(col, num)) {
         emptyPositions = removeElementsFromArray(
@@ -709,6 +748,18 @@ const checkForNumbernInGridByExcludingRow = (num, gridNum, rowNum) => {
         );
       }
     });
+
+    if (rowOrColumn == "row") {
+      emptyPositions = removeElementsFromArray(
+        emptyPositions,
+        getNumbersToRemoveBasedOnRow(rowOrColumnNum)
+      );
+    } else if (rowOrColumn == "column") {
+      emptyPositions = removeElementsFromArray(
+        emptyPositions,
+        getNumbersToRemoveBasedOnColumn(rowOrColumnNum)
+      );
+    }
 
     if (emptyPositions.length === 1) {
       let [row, col] = getRowAndColumnNumFromGridNumAndPosition(
@@ -725,12 +776,27 @@ const checkForNumbernInGridByExcludingRow = (num, gridNum, rowNum) => {
 
 const getGridNumbersInSameRow = gridNum => {
   let arr;
+
   if ([0, 1, 2].includes(gridNum)) {
     arr = [0, 1, 2];
   } else if ([3, 4, 5].includes(gridNum)) {
     arr = [3, 4, 5];
   } else if ([6, 7, 8].includes(gridNum)) {
     arr = [6, 7, 8];
+  }
+
+  return arr.filter(num => num !== gridNum);
+};
+
+const getGridNumbersInSameColumn = gridNum => {
+  let arr;
+
+  if ([0, 3, 6].includes(gridNum)) {
+    arr = [0, 3, 6];
+  } else if ([1, 4, 7].includes(gridNum)) {
+    arr = [1, 4, 7];
+  } else if ([2, 5, 8].includes(gridNum)) {
+    arr = [2, 5, 8];
   }
 
   return arr.filter(num => num !== gridNum);
