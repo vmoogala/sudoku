@@ -281,6 +281,7 @@ function doOneCycle() {
   checkAllColumnsForRemainingNumbers();
   checkAllGridsForRemainingNumbers();
   checkForRemainingNumbersInAllRows();
+  checkForRemainingNumbersInAllColumns();
 }
 
 const solveSudoku = () => {
@@ -820,7 +821,21 @@ const getRemainingValuesToFillInARow = rowNum => {
   return arr;
 };
 
-const getRemainingValuesToFillInAColumn = rowNum => {};
+// TODO: combine the logic with the above function
+const getRemainingValuesToFillInAColumn = rowNum => {
+  let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  let temp = [];
+
+  getColumnValues(rowNum).forEach(num => {
+    if (num !== 0) {
+      temp.push(num);
+    }
+  });
+
+  arr = removeElementsFromArray(arr, temp);
+
+  return arr;
+};
 
 const checkForRemainingNumbersInRow = rowNum => {
   let remainingValues = getRemainingValuesToFillInARow(rowNum);
@@ -841,7 +856,7 @@ const checkForRemainingNumbersInRow = rowNum => {
     });
     // console.log(pos, remainingNumbers);
     if (remainingNumbers.length == 1) {
-      console.log(remainingNumbers);
+      // console.log(remainingNumbers);
 
       remainingValues = removeElementsFromArray(
         remainingValues,
@@ -853,9 +868,42 @@ const checkForRemainingNumbersInRow = rowNum => {
   });
 };
 
+const checkForRemainingNumbersInColumn = colNum => {
+  let remainingValues = getRemainingValuesToFillInAColumn(colNum);
+  let emptyPositions = getEmptyPositionsFromColumn(colNum);
+
+  emptyPositions.forEach(pos => {
+    let gridNum = getGridNumberFromRowColumnNumbers(pos, colNum);
+    let remainingNumbers = [...remainingValues];
+    // console.log(pos, remainingNumbers);
+    remainingNumbers.forEach(num => {
+      if (ifNumberExistsInRow(pos, num) || ifNumberExistsInGrid(gridNum, num)) {
+        // console.log("removing number " + num);
+        remainingNumbers = remainingNumbers.filter(d => d !== num);
+      }
+    });
+    // console.log(pos, remainingNumbers);
+    if (remainingNumbers.length == 1) {
+      // console.log(remainingNumbers);
+
+      remainingValues = removeElementsFromArray(
+        remainingValues,
+        remainingNumbers
+      );
+
+      fillNumberInSudoku(remainingNumbers[0], pos, colNum);
+    }
+  });
+};
+
 const checkForRemainingNumbersInAllRows = () => {
   console.log("\nchecking all rows for remaining numbers");
   remainingRows.forEach(row => checkForRemainingNumbersInRow(row));
+};
+
+const checkForRemainingNumbersInAllColumns = () => {
+  console.log("\nchecking all columns for remaining numbers");
+  remainingColumns.forEach(col => checkForRemainingNumbersInColumn(col));
 };
 
 function prettyPrintData() {
@@ -873,6 +921,10 @@ function printFinalStats() {
   console.log("remaining Rows --> " + remainingRows);
   console.log("remaining Columns --> " + remainingColumns);
   console.log("remaining Grids --> " + remainingGrids);
+
+  console.log(
+    "number of elements left to fill --> " + noOfRemainingElementsToFill
+  );
 }
 
 solveSudoku();
