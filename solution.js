@@ -1,4 +1,4 @@
-const data = require("./question.js");
+const DATA = require("./question.js");
 
 // To track which numbers are left to fill in sudoku
 let remainingNumbers = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
@@ -67,7 +67,7 @@ let gridCount = {
 
 const ifNumberExistsInRow = (rowNum, num) => {
   // Should return true if number exists in a specific row
-  return data[rowNum].includes(num);
+  return DATA[rowNum].includes(num);
 };
 
 const ifNumberExistsInColumn = (colNum, num) => {
@@ -81,12 +81,12 @@ const ifNumberExistsInGrid = (gridNum, num) => {
 };
 
 const getRowValues = rowNum => {
-  return data[rowNum];
+  return DATA[rowNum];
 };
 
 const getColumnValues = colNum => {
   let arr = [];
-  data.forEach(d => {
+  DATA.forEach(d => {
     arr.push(d[colNum]);
   });
   return arr;
@@ -158,10 +158,10 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
   // If the count is 0, remove it from remaining numbers
   let currentGridNum = getGridNumberFromRowColumnNumbers(rowNum, colNum);
 
-  if (data[rowNum][colNum] === 0) {
-    data[rowNum][colNum] = num;
+  if (DATA[rowNum][colNum] === 0) {
+    DATA[rowNum][colNum] = num;
     console.log(`\nfilled number ${num} in row ${rowNum}, column ${colNum}`);
-    // console.log(data);
+    // console.log(DATA);
     console.log(
       `before counts are number: ${numberCount[num]}, row: ${
         rowCount[rowNum]
@@ -218,7 +218,7 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
   }
 };
 
-const initializeNumberCount = data => {
+const initializeNumberCount = () => {
   // This will initialize the number count based on the given question
 
   // Adding 0 to the numberCount to avoid checking in the below
@@ -227,7 +227,7 @@ const initializeNumberCount = data => {
 
   numberCount["0"] = 81;
 
-  data.forEach(row => {
+  DATA.forEach(row => {
     row.forEach(num => {
       numberCount[num] = numberCount[num] - 1;
     });
@@ -236,10 +236,10 @@ const initializeNumberCount = data => {
   delete numberCount["0"];
 };
 
-const initializeRowCount = data => {
+const initializeRowCount = () => {
   // This will initialize the row count based on the given question
 
-  data.forEach((row, rowNum) => {
+  DATA.forEach((row, rowNum) => {
     row.forEach(num => {
       if (num !== 0) {
         rowCount[rowNum]--;
@@ -268,9 +268,9 @@ const initializeGridCount = () => {
   });
 };
 
-const initializeSetup = data => {
-  initializeNumberCount(data);
-  initializeRowCount(data);
+const initializeSetup = () => {
+  initializeNumberCount();
+  initializeRowCount();
   initializeColumnCount();
   initializeGridCount();
   noOfRemainingElementsToFill = getRemainingNoOfElementsToFill();
@@ -280,15 +280,18 @@ function doOneCycle() {
   checkAllRowsForRemainingNumbers();
   checkAllColumnsForRemainingNumbers();
   checkAllGridsForRemainingNumbers();
+  checkForRemainingNumbersInAllRows();
 }
 
-const solveSudoku = data => {
-  initializeSetup(data);
+const solveSudoku = () => {
+  initializeSetup();
   let beforeCount;
   do {
     beforeCount = noOfRemainingElementsToFill;
     doOneCycle();
   } while (beforeCount > noOfRemainingElementsToFill);
+
+  printFinalStats();
 };
 
 const getRemainingNoOfElementsToFill = () => {
@@ -802,4 +805,74 @@ const getGridNumbersInSameColumn = gridNum => {
   return arr.filter(num => num !== gridNum);
 };
 
-solveSudoku(data);
+const getRemainingValuesToFillInARow = rowNum => {
+  let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  let temp = [];
+
+  getRowValues(rowNum).forEach(num => {
+    if (num !== 0) {
+      temp.push(num);
+    }
+  });
+
+  arr = removeElementsFromArray(arr, temp);
+
+  return arr;
+};
+
+const getRemainingValuesToFillInAColumn = rowNum => {};
+
+const checkForRemainingNumbersInRow = rowNum => {
+  let remainingValues = getRemainingValuesToFillInARow(rowNum);
+  let emptyPositions = getEmptyPositionsFromRow(rowNum);
+
+  emptyPositions.forEach(pos => {
+    let gridNum = getGridNumberFromRowColumnNumbers(rowNum, pos);
+    let remainingNumbers = [...remainingValues];
+    // console.log(pos, remainingNumbers);
+    remainingNumbers.forEach(num => {
+      if (
+        ifNumberExistsInColumn(pos, num) ||
+        ifNumberExistsInGrid(gridNum, num)
+      ) {
+        // console.log("removing number " + num);
+        remainingNumbers = remainingNumbers.filter(d => d !== num);
+      }
+    });
+    // console.log(pos, remainingNumbers);
+    if (remainingNumbers.length == 1) {
+      console.log(remainingNumbers);
+
+      remainingValues = removeElementsFromArray(
+        remainingValues,
+        remainingNumbers
+      );
+
+      fillNumberInSudoku(remainingNumbers[0], rowNum, pos);
+    }
+  });
+};
+
+const checkForRemainingNumbersInAllRows = () => {
+  console.log("\nchecking all rows for remaining numbers");
+  remainingRows.forEach(row => checkForRemainingNumbersInRow(row));
+};
+
+function prettyPrintData() {
+  console.log("");
+  for (let i = 0; i < DATA.length; i++) {
+    console.log(DATA[i].join("  "));
+  }
+  console.log("");
+}
+
+function printFinalStats() {
+  console.log("\n######## Solving done");
+  prettyPrintData();
+  console.log("remaining Numbers --> " + remainingNumbers.size);
+  console.log("remaining Rows --> " + remainingRows);
+  console.log("remaining Columns --> " + remainingColumns);
+  console.log("remaining Grids --> " + remainingGrids);
+}
+
+solveSudoku();
