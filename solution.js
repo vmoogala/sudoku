@@ -402,12 +402,8 @@ const getPossibleRowsAndColumnsFromGridNumber = gridNum => {
   ];
 };
 
-const getRowAndColumnNumFromGridNumAndPosition = (
-  gridNum,
-  posNum,
-  possRows,
-  possCols
-) => {
+const getRowAndColumnNumFromGridNumAndPosition = (gridNum, posNum) => {
+  let [possRows, possCols] = getPossibleRowsAndColumnsFromGridNumber(gridNum);
   let row;
   let col;
   if ([0, 1, 2].includes(posNum)) {
@@ -553,9 +549,7 @@ const checkInGrid = (gridNum, num) => {
     if (emptyPositions.length === 1) {
       let [row, col] = getRowAndColumnNumFromGridNumAndPosition(
         gridNum,
-        emptyPositions[0],
-        possibleRows,
-        possibleColumns
+        emptyPositions[0]
       );
 
       fillNumberInSudoku(num, row, col);
@@ -768,9 +762,7 @@ const checkForNumbernInGridByExcludingRowOrColumn = (
     if (emptyPositions.length === 1) {
       let [row, col] = getRowAndColumnNumFromGridNumAndPosition(
         gridNum,
-        emptyPositions[0],
-        possibleRows,
-        possibleColumns
+        emptyPositions[0]
       );
 
       fillNumberInSudoku(num, row, col);
@@ -822,11 +814,26 @@ const getRemainingValuesToFillInARow = rowNum => {
 };
 
 // TODO: combine the logic with the above function
-const getRemainingValuesToFillInAColumn = rowNum => {
+const getRemainingValuesToFillInAColumn = colNum => {
   let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   let temp = [];
 
-  getColumnValues(rowNum).forEach(num => {
+  getColumnValues(colNum).forEach(num => {
+    if (num !== 0) {
+      temp.push(num);
+    }
+  });
+
+  arr = removeElementsFromArray(arr, temp);
+
+  return arr;
+};
+
+const getRemainingValuesToFillInAGrid = gridNum => {
+  let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  let temp = [];
+
+  getGridValues(gridNum).forEach(num => {
     if (num !== 0) {
       temp.push(num);
     }
