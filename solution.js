@@ -906,6 +906,25 @@ const checkForRemainingNumbersInAllColumns = () => {
   remainingColumns.forEach(col => checkForRemainingNumbersInColumn(col));
 };
 
+const ifColumnHasPossibilitiesInSameGrid = colNum => {
+  let positions = getEmptyPositionsFromColumn(colNum);
+  if (positions.length <= 3 && positions.length > 1) {
+    positions.sort();
+    let first = positions[0];
+    let last = positions[positions.length - 1];
+    if (
+      (last <= 2 && first >= 0) ||
+      (last <= 5 && first >= 3) ||
+      (last <= 8 && first >= 6)
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  return false;
+};
+
 function prettyPrintData() {
   console.log("");
   for (let i = 0; i < DATA.length; i++) {
