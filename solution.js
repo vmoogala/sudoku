@@ -282,6 +282,7 @@ function doOneCycle() {
   checkAllGridsForRemainingNumbers();
   checkForRemainingNumbersInAllRows();
   checkForRemainingNumbersInAllColumns();
+  checkForNumbersInGridIfColumnHasRemainingNumsAreInSameGrid();
 }
 
 const solveSudoku = () => {
@@ -290,6 +291,9 @@ const solveSudoku = () => {
   do {
     beforeCount = noOfRemainingElementsToFill;
     doOneCycle();
+    if (noOfRemainingElementsToFill === 0) {
+      break;
+    }
   } while (beforeCount > noOfRemainingElementsToFill);
 
   printFinalStats();
@@ -911,6 +915,61 @@ const checkForRemainingNumbersInAllRows = () => {
 const checkForRemainingNumbersInAllColumns = () => {
   console.log("\nchecking all columns for remaining numbers");
   remainingColumns.forEach(col => checkForRemainingNumbersInColumn(col));
+};
+
+const checkForNumbersInGridExcludingColumnAndNumbers = (
+  gridNum,
+  colNum,
+  numbers
+) => {
+  console.log(gridNum, colNum, numbers);
+
+  let remainingValues = getRemainingValuesToFillInAGrid(gridNum);
+  let emptyPositions = getEmptyPositionsFromGrid(gridNum);
+
+  emptyPositions = removeElementsFromArray(
+    emptyPositions,
+    getNumbersToRemoveBasedOnColumn(colNum)
+  );
+
+  remainingValues = removeElementsFromArray(remainingValues, numbers);
+
+  console.log(emptyPositions, remainingValues);
+
+  emptyPositions.forEach(pos => {
+    let temp1 = [...remainingValues];
+    temp1.forEach(num => {
+      if (!ifNumberPossibleAtAPositionInGrid(num, gridNum, pos)) {
+        temp1 = temp1.filter(d => d !== num);
+      }
+    });
+    if (temp1.length === 1) {
+      console.log(temp1[0], gridNum, pos);
+      remainingValues = removeElementsFromArray(remainingValues, temp1);
+      emptyPositions = removeElementsFromArray(emptyPositions, [pos]);
+      let [row, col] = getRowAndColumnNumFromGridNumAndPosition(gridNum, pos);
+      fillNumberInSudoku(temp1[0], row, col);
+    }
+  });
+};
+
+const checkForNumbersInGridIfColumnHasRemainingNumsAreInSameGrid = () => {
+  remainingColumns.forEach(colNum => {
+    if (ifColumnHasPossibilitiesInSameGrid(colNum)) {
+      let emptyPositions = getEmptyPositionsFromColumn(colNum);
+      let remainingValues = getRemainingValuesToFillInAColumn(colNum);
+      let gridNum = getGridNumberFromRowColumnNumbers(
+        emptyPositions[0],
+        colNum
+      );
+
+      checkForNumbersInGridExcludingColumnAndNumbers(
+        gridNum,
+        colNum,
+        remainingValues
+      );
+    }
+  });
 };
 
 const ifColumnHasPossibilitiesInSameGrid = colNum => {
