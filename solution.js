@@ -932,6 +932,18 @@ const ifColumnHasPossibilitiesInSameGrid = colNum => {
   return false;
 };
 
+const ifNumberPossibleAtAPositionInGrid = (num, gridNum, posNum) => {
+  let [row, col] = getRowAndColumnNumFromGridNumAndPosition(gridNum, posNum);
+  if (
+    ifNumberExistsInColumn(col, num) ||
+    ifNumberExistsInRow(row, num) ||
+    ifNumberExistsInGrid(gridNum, num)
+  ) {
+    return false;
+  }
+  return true;
+};
+
 function prettyPrintData() {
   console.log("");
   for (let i = 0; i < DATA.length; i++) {
