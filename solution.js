@@ -285,7 +285,7 @@ function doOneCycle() {
   checkAllGridsForRemainingNumbers();
   checkForRemainingNumbersInAllRows();
   checkForRemainingNumbersInAllColumns();
-  checkForNumbersInGridIfColumnHasRemainingNumsAreInSameGrid();
+  checkForNumbersInGridIfColumnHasRemainingNumsInSameGrid();
 }
 
 const solveSudoku = () => {
@@ -957,8 +957,9 @@ const checkForNumbersInGridExcludingColumnAndNumbers = (
 };
 
 const checkForNumbersInGridIfColumnHasRemainingNumsAreInSameGrid = () => {
+const checkForNumbersInGridIfColumnHasRemainingNumsInSameGrid = () => {
   remainingColumns.forEach(colNum => {
-    if (ifColumnHasPossibilitiesInSameGrid(colNum)) {
+    if (ifRowOrColumnHasPossibilitiesInSameGrid(COLUMN, colNum)) {
       let emptyPositions = getEmptyPositionsFromColumn(colNum);
       let remainingValues = getRemainingValuesToFillInAColumn(colNum);
       let gridNum = getGridNumberFromRowColumnNumbers(
@@ -975,8 +976,14 @@ const checkForNumbersInGridIfColumnHasRemainingNumsAreInSameGrid = () => {
   });
 };
 
-const ifColumnHasPossibilitiesInSameGrid = colNum => {
-  let positions = getEmptyPositionsFromColumn(colNum);
+const ifRowOrColumnHasPossibilitiesInSameGrid = (rowOrColumn, rowOrColNum) => {
+  let positions;
+
+  if (rowOrColumn === ROW) {
+    positions = getEmptyPositionsFromRow(rowOrColNum);
+  } else {
+    positions = getEmptyPositionsFromColumn(rowOrColNum);
+  }
   if (positions.length <= 3 && positions.length > 1) {
     positions.sort();
     let first = positions[0];
