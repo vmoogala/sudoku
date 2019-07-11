@@ -15,3 +15,6 @@ sudoku
 
 - Feature3
   If a column has all the remaining numbers to be filled in a same grid, find for other numbers in the grid excluding the numbers to be filled in that column in the grid.
+
+- Feature4
+  If a row has all the remaining numbers to be filled in a same grid, find for other numbers in the grid excluding the numbers to be filled in that row in the grid.
