@@ -7,9 +7,9 @@ const COLUMN = "COLUMN";
 let remainingNumbers = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
 // To track which rows/columns/grids to be filled
-const remainingRows = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-const remainingColumns = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-const remainingGrids = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+let remainingRows = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+let remainingColumns = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+let remainingGrids = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 // To trigger a new cycle of row/column/grid checking whenever this count decreases
 let noOfRemainingElementsToFill;
@@ -170,7 +170,7 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
         rowCount[rowNum]
       }, column: ${columnCount[colNum]}, grid: ${
         gridCount[currentGridNum]
-      }, remaining: ${noOfRemainingElementsToFill}`
+      }, remainingNoOfElements: ${noOfRemainingElementsToFill}, remainingRows: ${remainingRows}, remainingColumns: ${remainingColumns}, remainingGrids: ${remainingGrids}`
     );
 
     numberCount[num]--;
@@ -184,7 +184,7 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
         rowCount[rowNum]
       }, column ${columnCount[colNum]}, grid: ${
         gridCount[currentGridNum]
-      }, remaining: ${noOfRemainingElementsToFill}`
+      }, remaining: ${noOfRemainingElementsToFill}, remainingRows: ${remainingRows}, remainingColumns: ${remainingColumns}, remainingGrids: ${remainingGrids}`
     );
 
     if (numberCount[num] === 1) {
@@ -201,6 +201,7 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
       remainingNumbers.forEach(num => {
         checkInRow(rowNum, num);
       });
+      remainingRows = removeElementsFromArray(remainingRows, [rowNum]);
     }
 
     if (columnCount[colNum] == 1) {
@@ -209,6 +210,7 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
       remainingNumbers.forEach(num => {
         checkInColumn(colNum, num);
       });
+      remainingColumns = removeElementsFromArray(remainingColumns, [colNum]);
     }
 
     if (gridCount[currentGridNum] == 1) {
@@ -217,6 +219,9 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
       remainingNumbers.forEach(num => {
         checkInGrid(currentGridNum, num);
       });
+      remainingGrids = removeElementsFromArray(remainingGrids, [
+        currentGridNum
+      ]);
     }
   }
 };
@@ -1011,6 +1016,12 @@ const ifNumberPossibleAtAPositionInGrid = (num, gridNum, posNum) => {
     return false;
   }
   return true;
+};
+
+const checkEverywhereForRemainingNumbers = () => {
+  remainingNumbers.forEach(num => {
+    checkEverywhereForANumber(num);
+  });
 };
 
 function prettyPrintData() {
