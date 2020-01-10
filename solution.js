@@ -1,4 +1,4 @@
-const DATA = require("./question.js");
+let DATA = require("./question.js");
 
 const ROW = "ROW";
 const COLUMN = "COLUMN";
@@ -68,20 +68,9 @@ let gridCount = {
   "8": 9
 };
 
-const ifNumberExistsInRow = (rowNum, num) => {
-  // Should return true if number exists in a specific row
-  return getRowValues(rowNum).includes(num);
-};
-
-const ifNumberExistsInColumn = (colNum, num) => {
-  // Should return true if number exists in a specific column
-  return getColumnValues(colNum).includes(num);
-};
-
-const ifNumberExistsInGrid = (gridNum, num) => {
-  // Should return true if number exists in a specific grid
-  return getGridValues(gridNum).includes(num);
-};
+function removeElementsFromArray(arr, elements) {
+  return arr.filter(num => !elements.includes(num));
+}
 
 const getRowValues = rowNum => {
   return DATA[rowNum];
@@ -112,6 +101,117 @@ const getGridValues = gridNum => {
     });
   }
   return arr.flat();
+};
+
+const ifRowHasNumber = (rowNum, num) => {
+  // Should return true if number exists in a specific row
+  return getRowValues(rowNum).includes(num);
+};
+
+const ifColumnHasNumber = (colNum, num) => {
+  // Should return true if number exists in a specific column
+  return getColumnValues(colNum).includes(num);
+};
+
+const ifGridHasNumber = (gridNum, num) => {
+  // Should return true if number exists in a specific grid
+  return getGridValues(gridNum).includes(num);
+};
+
+const getEmptyPositionsFromRow = rowNum => {
+  let arr = [];
+  getRowValues(rowNum).forEach((d, i) => {
+    if (d === 0) {
+      arr.push(i);
+    }
+  });
+  return arr;
+};
+
+const getEmptyPositionsFromColumn = colNum => {
+  let arr = [];
+  getColumnValues(colNum).forEach((d, i) => {
+    if (d === 0) {
+      arr.push(i);
+    }
+  });
+  return arr;
+};
+
+const getEmptyPositionsFromGrid = gridNum => {
+  let arr = [];
+  getGridValues(gridNum).forEach((d, i) => {
+    if (d === 0) {
+      arr.push(i);
+    }
+  });
+  return arr;
+};
+
+const initializeNumberCount = () => {
+  // This will initialize the number count based on the given question
+
+  // Adding 0 to the numberCount to avoid checking in the below
+  // loop whether the number is "0" or actually a number
+  // This key will be deleted once the operation is done
+
+  numberCount["0"] = 81;
+
+  DATA.forEach(row => {
+    row.forEach(num => {
+      numberCount[num] = numberCount[num] - 1;
+    });
+  });
+
+  delete numberCount["0"];
+};
+
+const initializeRowCount = () => {
+  // This will initialize the row count based on the given question
+
+  DATA.forEach((row, rowNum) => {
+    row.forEach(num => {
+      if (num !== 0) {
+        rowCount[rowNum]--;
+      }
+    });
+  });
+};
+
+const initializeColumnCount = () => {
+  [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(colNum => {
+    getColumnValues(colNum).forEach(num => {
+      if (num !== 0) {
+        columnCount[colNum]--;
+      }
+    });
+  });
+};
+
+const initializeGridCount = () => {
+  [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(gridNum => {
+    getGridValues(gridNum).forEach(num => {
+      if (num !== 0) {
+        gridCount[gridNum]--;
+      }
+    });
+  });
+};
+
+const initializeRemainingNoOfElements = () => {
+  let sum = 0;
+  Object.entries(numberCount).forEach(([key, value]) => {
+    sum += value;
+  });
+  noOfRemainingElementsToFill = sum;
+};
+
+const initializeSetup = () => {
+  initializeNumberCount();
+  initializeRowCount();
+  initializeColumnCount();
+  initializeGridCount();
+  initializeRemainingNoOfElements();
 };
 
 //Helper Function
@@ -160,6 +260,14 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
   // If the count is 1, invoke logic to fill the last available space
   // If the count is 0, remove it from remaining numbers
   let currentGridNum = getGridNumberFromRowColumnNumbers(rowNum, colNum);
+
+  if (
+    ifRowHasNumber(rowNum, num) ||
+    ifColumnHasNumber(colNum, num) ||
+    ifGridHasNumber(currentGridNum, num)
+  ) {
+    throw new Error("sudoku solving failed");
+  }
 
   if (DATA[rowNum][colNum] === 0) {
     DATA[rowNum][colNum] = num;
@@ -226,64 +334,6 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
   }
 };
 
-const initializeNumberCount = () => {
-  // This will initialize the number count based on the given question
-
-  // Adding 0 to the numberCount to avoid checking in the below
-  // loop whether the number is "0" or actually a number
-  // This key will be deleted once the operation is done
-
-  numberCount["0"] = 81;
-
-  DATA.forEach(row => {
-    row.forEach(num => {
-      numberCount[num] = numberCount[num] - 1;
-    });
-  });
-
-  delete numberCount["0"];
-};
-
-const initializeRowCount = () => {
-  // This will initialize the row count based on the given question
-
-  DATA.forEach((row, rowNum) => {
-    row.forEach(num => {
-      if (num !== 0) {
-        rowCount[rowNum]--;
-      }
-    });
-  });
-};
-
-const initializeColumnCount = () => {
-  [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(colNum => {
-    getColumnValues(colNum).forEach(num => {
-      if (num !== 0) {
-        columnCount[colNum]--;
-      }
-    });
-  });
-};
-
-const initializeGridCount = () => {
-  [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(gridNum => {
-    getGridValues(gridNum).forEach(num => {
-      if (num !== 0) {
-        gridCount[gridNum]--;
-      }
-    });
-  });
-};
-
-const initializeSetup = () => {
-  initializeNumberCount();
-  initializeRowCount();
-  initializeColumnCount();
-  initializeGridCount();
-  noOfRemainingElementsToFill = getRemainingNoOfElementsToFill();
-};
-
 function doOneCycle() {
   checkAllRowsForRemainingNumbers();
   checkAllColumnsForRemainingNumbers();
@@ -294,7 +344,6 @@ function doOneCycle() {
 }
 
 const solveSudoku = () => {
-  initializeSetup();
   let beforeCount;
   do {
     beforeCount = noOfRemainingElementsToFill;
@@ -304,15 +353,11 @@ const solveSudoku = () => {
     }
   } while (beforeCount > noOfRemainingElementsToFill);
 
-  printFinalStats();
-};
+  /**
+   * Guessing game should start here
+   */
 
-const getRemainingNoOfElementsToFill = () => {
-  let sum = 0;
-  Object.entries(numberCount).forEach(([key, value]) => {
-    sum += value;
-  });
-  return sum;
+  printFinalStats();
 };
 
 const getPossibleGridNumbersFromRowNumber = rowNum => {
@@ -377,36 +422,6 @@ const getNumbersToRemoveBasedOnColumn = colNum => {
   return helper2(colNum);
 };
 
-const getEmptyPositionsFromRow = rowNum => {
-  let arr = [];
-  getRowValues(rowNum).forEach((d, i) => {
-    if (d === 0) {
-      arr.push(i);
-    }
-  });
-  return arr;
-};
-
-const getEmptyPositionsFromColumn = colNum => {
-  let arr = [];
-  getColumnValues(colNum).forEach((d, i) => {
-    if (d === 0) {
-      arr.push(i);
-    }
-  });
-  return arr;
-};
-
-const getEmptyPositionsFromGrid = gridNum => {
-  let arr = [];
-  getGridValues(gridNum).forEach((d, i) => {
-    if (d === 0) {
-      arr.push(i);
-    }
-  });
-  return arr;
-};
-
 const getPossibleRowsAndColumnsFromGridNumber = gridNum => {
   return [
     getPossibleColumnNumbersFromGridNumber(gridNum),
@@ -437,17 +452,13 @@ const getRowAndColumnNumFromGridNumAndPosition = (gridNum, posNum) => {
   return [row, col];
 };
 
-function removeElementsFromArray(arr, elements) {
-  return arr.filter(num => !elements.includes(num));
-}
-
 /**
  * Should check and fill numbers in a specific row
  * @param {*} rowNum
  * @param {*} num
  */
 const checkInRow = (rowNum, num) => {
-  if (!ifNumberExistsInRow(rowNum, num)) {
+  if (!ifRowHasNumber(rowNum, num)) {
     let emptyPositions = getEmptyPositionsFromRow(rowNum);
 
     // Check in grids first if number is present.
@@ -456,7 +467,7 @@ const checkInRow = (rowNum, num) => {
     currentGridsForRow = getPossibleGridNumbersFromRowNumber(rowNum);
 
     currentGridsForRow.forEach(gridNum => {
-      if (ifNumberExistsInGrid(gridNum, num)) {
+      if (ifGridHasNumber(gridNum, num)) {
         emptyPositions = removeElementsFromArray(
           emptyPositions,
           getPossibleRowNumbersFromGridNumber(gridNum)
@@ -468,7 +479,7 @@ const checkInRow = (rowNum, num) => {
 
     // Check in columns now for empty positions available
     emptyPositions.forEach(d => {
-      if (ifNumberExistsInColumn(d, num)) {
+      if (ifColumnHasNumber(d, num)) {
         elemToBeRemoved.push(d);
       }
     });
@@ -490,7 +501,7 @@ const checkInRow = (rowNum, num) => {
  * @param {*} num
  */
 const checkInColumn = (colNum, num) => {
-  if (!ifNumberExistsInColumn(colNum, num)) {
+  if (!ifColumnHasNumber(colNum, num)) {
     let emptyPositions = getEmptyPositionsFromColumn(colNum);
 
     // Check in grids first if number is present.
@@ -499,7 +510,7 @@ const checkInColumn = (colNum, num) => {
     currentGridsForColumn = getPossibleGridNumbersFromColumnNumber(colNum);
 
     currentGridsForColumn.forEach(gridNum => {
-      if (ifNumberExistsInGrid(gridNum, num)) {
+      if (ifGridHasNumber(gridNum, num)) {
         emptyPositions = removeElementsFromArray(
           emptyPositions,
           getPossibleColumnNumbersFromGridNumber(gridNum)
@@ -511,7 +522,7 @@ const checkInColumn = (colNum, num) => {
 
     // Check in columns now for empty positions available
     emptyPositions.forEach(d => {
-      if (ifNumberExistsInRow(d, num)) {
+      if (ifRowHasNumber(d, num)) {
         elemToBeRemoved.push(d);
       }
     });
@@ -533,7 +544,7 @@ const checkInColumn = (colNum, num) => {
  * @param {*} num
  */
 const checkInGrid = (gridNum, num) => {
-  if (!ifNumberExistsInGrid(gridNum, num)) {
+  if (!ifGridHasNumber(gridNum, num)) {
     let emptyPositions = getEmptyPositionsFromGrid(gridNum);
     let [
       possibleRows,
@@ -541,7 +552,7 @@ const checkInGrid = (gridNum, num) => {
     ] = getPossibleRowsAndColumnsFromGridNumber(gridNum);
 
     possibleRows.forEach(row => {
-      if (ifNumberExistsInRow(row, num)) {
+      if (ifRowHasNumber(row, num)) {
         emptyPositions = removeElementsFromArray(
           emptyPositions,
           getNumbersToRemoveBasedOnRow(row)
@@ -550,7 +561,7 @@ const checkInGrid = (gridNum, num) => {
     });
 
     possibleColumns.forEach(col => {
-      if (ifNumberExistsInColumn(col, num)) {
+      if (ifColumnHasNumber(col, num)) {
         emptyPositions = removeElementsFromArray(
           emptyPositions,
           getNumbersToRemoveBasedOnColumn(col)
@@ -734,7 +745,7 @@ const checkForNumbernInGridByExcludingRowOrColumn = (
   gridNum,
   rowOrColumnNum
 ) => {
-  if (!ifNumberExistsInGrid(gridNum, num)) {
+  if (!ifGridHasNumber(gridNum, num)) {
     let emptyPositions = getEmptyPositionsFromGrid(gridNum);
     let [
       possibleRows,
@@ -742,7 +753,7 @@ const checkForNumbernInGridByExcludingRowOrColumn = (
     ] = getPossibleRowsAndColumnsFromGridNumber(gridNum);
 
     possibleRows.forEach(row => {
-      if (ifNumberExistsInRow(row, num)) {
+      if (ifRowHasNumber(row, num)) {
         emptyPositions = removeElementsFromArray(
           emptyPositions,
           getNumbersToRemoveBasedOnRow(row)
@@ -751,7 +762,7 @@ const checkForNumbernInGridByExcludingRowOrColumn = (
     });
 
     possibleColumns.forEach(col => {
-      if (ifNumberExistsInColumn(col, num)) {
+      if (ifColumnHasNumber(col, num)) {
         emptyPositions = removeElementsFromArray(
           emptyPositions,
           getNumbersToRemoveBasedOnColumn(col)
@@ -865,10 +876,7 @@ const checkForRemainingNumbersInRow = rowNum => {
     let remainingNumbers = [...remainingValues];
     // console.log(pos, remainingNumbers);
     remainingNumbers.forEach(num => {
-      if (
-        ifNumberExistsInColumn(pos, num) ||
-        ifNumberExistsInGrid(gridNum, num)
-      ) {
+      if (ifColumnHasNumber(pos, num) || ifGridHasNumber(gridNum, num)) {
         // console.log("removing number " + num);
         remainingNumbers = remainingNumbers.filter(d => d !== num);
       }
@@ -896,7 +904,7 @@ const checkForRemainingNumbersInColumn = colNum => {
     let remainingNumbers = [...remainingValues];
     // console.log(pos, remainingNumbers);
     remainingNumbers.forEach(num => {
-      if (ifNumberExistsInRow(pos, num) || ifNumberExistsInGrid(gridNum, num)) {
+      if (ifRowHasNumber(pos, num) || ifGridHasNumber(gridNum, num)) {
         // console.log("removing number " + num);
         remainingNumbers = remainingNumbers.filter(d => d !== num);
       }
@@ -961,7 +969,6 @@ const checkForNumbersInGridExcludingColumnAndNumbers = (
   });
 };
 
-const checkForNumbersInGridIfColumnHasRemainingNumsAreInSameGrid = () => {
 const checkForNumbersInGridIfColumnHasRemainingNumsInSameGrid = () => {
   remainingColumns.forEach(colNum => {
     if (ifRowOrColumnHasPossibilitiesInSameGrid(COLUMN, colNum)) {
@@ -1009,9 +1016,9 @@ const ifRowOrColumnHasPossibilitiesInSameGrid = (rowOrColumn, rowOrColNum) => {
 const ifNumberPossibleAtAPositionInGrid = (num, gridNum, posNum) => {
   let [row, col] = getRowAndColumnNumFromGridNumAndPosition(gridNum, posNum);
   if (
-    ifNumberExistsInColumn(col, num) ||
-    ifNumberExistsInRow(row, num) ||
-    ifNumberExistsInGrid(gridNum, num)
+    ifColumnHasNumber(col, num) ||
+    ifRowHasNumber(row, num) ||
+    ifGridHasNumber(gridNum, num)
   ) {
     return false;
   }
@@ -1045,4 +1052,89 @@ function printFinalStats() {
   );
 }
 
+initializeSetup();
 solveSudoku();
+
+if (noOfRemainingElementsToFill != 0) {
+  console.log("logic is not good enough. Guessing game begins");
+
+  let oldData = JSON.parse(JSON.stringify(DATA));
+  let oldremainingNumbers = new Set(remainingNumbers);
+  let oldremainingRows = JSON.parse(JSON.stringify(remainingRows));
+  let oldremainingColumns = JSON.parse(JSON.stringify(remainingColumns));
+  let oldremainingGrids = JSON.parse(JSON.stringify(remainingGrids));
+  let oldnumberCount = JSON.parse(JSON.stringify(numberCount));
+  let oldrowCount = JSON.parse(JSON.stringify(rowCount));
+  let oldcolumnCount = JSON.parse(JSON.stringify(columnCount));
+  let oldgridCount = JSON.parse(JSON.stringify(gridCount));
+  let oldnoOfRemainingElementsToFill = noOfRemainingElementsToFill;
+
+  // guessing game
+  let guessGrid;
+  remainingGrids.forEach(d => {
+    if (gridCount[d] == 2) {
+      guessGrid = d;
+    }
+  });
+  console.log(guessGrid);
+
+  let vals = getRemainingValuesToFillInAGrid(guessGrid);
+  console.log(vals);
+
+  let poss = getEmptyPositionsFromGrid(guessGrid);
+  console.log(poss);
+
+  let currentCombination = [vals[0], poss[0]];
+  let nextCombination = [vals[0], poss[1]];
+
+  let [rowNum, colNum] = getRowAndColumnNumFromGridNumAndPosition(
+    guessGrid,
+    currentCombination[1]
+  );
+
+  console.log(rowNum, colNum);
+
+  fillNumberInSudoku(currentCombination[0], rowNum, colNum);
+  solveSudoku();
+
+  if (noOfRemainingElementsToFill == 0) {
+    console.log("success with combo 1");
+  } else {
+    console.log("failure with combination 1");
+    DATA = JSON.parse(JSON.stringify(oldData));
+    remainingNumbers = new Set(oldremainingNumbers);
+    remainingRows = JSON.parse(JSON.stringify(oldremainingRows));
+    remainingColumns = JSON.parse(JSON.stringify(oldremainingColumns));
+    remainingGrids = JSON.parse(JSON.stringify(oldremainingGrids));
+    numberCount = JSON.parse(JSON.stringify(oldnumberCount));
+    rowCount = JSON.parse(JSON.stringify(oldrowCount));
+    columnCount = JSON.parse(JSON.stringify(oldcolumnCount));
+    gridCount = JSON.parse(JSON.stringify(oldgridCount));
+    noOfRemainingElementsToFill = oldnoOfRemainingElementsToFill;
+
+    console.log("trying with combination 2");
+    console.log(guessGrid);
+
+    let vals = getRemainingValuesToFillInAGrid(guessGrid);
+    console.log(vals);
+
+    let poss = getEmptyPositionsFromGrid(guessGrid);
+    console.log(poss);
+
+    let [rowNum, colNum] = getRowAndColumnNumFromGridNumAndPosition(
+      guessGrid,
+      nextCombination[1]
+    );
+
+    console.log(rowNum, colNum);
+
+    fillNumberInSudoku(nextCombination[0], rowNum, colNum);
+    solveSudoku();
+
+    if (noOfRemainingElementsToFill == 0) {
+      console.log("success with the second combo");
+    }
+  }
+} else {
+  console.log("success with logic");
+}
