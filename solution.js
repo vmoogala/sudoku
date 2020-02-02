@@ -441,6 +441,64 @@ const getPossibilitiesForColumn = colNum => {
   return arr;
 };
 
+const removeFromUnitPossibility = (rowOrColumn, rowOrColNum, elements) => {
+  console.log(
+    "solving naked subset for " +
+      rowOrColumn +
+      " num " +
+      rowOrColNum +
+      ", removing elements " +
+      elements
+  );
+  if (rowOrColumn == ROW) {
+    _getUnitsApplicableForRow(rowOrColNum).forEach(d => {
+      if (unitPossibilitiesMap[d]) {
+        if (!arrayEquals(unitPossibilitiesMap[d], elements)) {
+          // print(
+          //   "intial unit possibility map for " +
+          //     d +
+          //     " " +
+          //     unitPossibilitiesMap[d]
+          // );
+          unitPossibilitiesMap[d] = removeElementsFromArray(
+            unitPossibilitiesMap[d],
+            elements
+          );
+          // print(
+          //   "updated unit possibility map for " +
+          //     d +
+          //     " " +
+          //     unitPossibilitiesMap[d]
+          // );
+        }
+      }
+    });
+  } else if (rowOrColumn == COLUMN) {
+    _getUnitsApplicableForColumn(rowOrColNum).forEach(d => {
+      if (unitPossibilitiesMap[d]) {
+        if (!arrayEquals(unitPossibilitiesMap[d], elements)) {
+          // print(
+          //   "intial unit possibility map for " +
+          //     d +
+          //     " " +
+          //     unitPossibilitiesMap[d]
+          // );
+          unitPossibilitiesMap[d] = removeElementsFromArray(
+            unitPossibilitiesMap[d],
+            elements
+          );
+          // print(
+          //   "updated unit possibility map for " +
+          //     d +
+          //     " " +
+          //     unitPossibilitiesMap[d]
+          // );
+        }
+      }
+    });
+  }
+};
+
 const removeNumberFromUnitMap = (num, unitNum) => {
   if (unitPossibilitiesMap[unitNum]) {
     unitPossibilitiesMap[
@@ -498,6 +556,101 @@ const updatePossibilitiesMaps = (num, rowNum, colNum) => {
     num,
     getGridNumberFromRowColumnNumbers(rowNum, colNum)
   );
+};
+
+// naked subset
+const solveNakedSubset = () => {
+  remainingRows.forEach(d => {
+    // printPossibilitiesForNumbersInSameRow(d);
+    let arr = getPossibilitiesForRow(d);
+
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i].length == 2) {
+        for (let j = i + 1; j < arr.length; j++) {
+          if (arrayEquals(arr[i], arr[j])) {
+            removeFromUnitPossibility(ROW, d, arr[i]);
+          }
+        }
+      }
+    }
+  });
+
+  remainingColumns.forEach(d => {
+    // printPossibilitiesForNumbersInSameRow(d);
+    let arr = getPossibilitiesForColumn(d);
+
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i].length == 2) {
+        for (let j = i + 1; j < arr.length; j++) {
+          if (arrayEquals(arr[i], arr[j])) {
+            removeFromUnitPossibility(COLUMN, d, arr[i]);
+          }
+        }
+      }
+    }
+  });
+};
+
+const checkForSinglePossibilityAfterEverything = () => {
+  remainingColumns.forEach(colNum => {
+    possibilities = getPossibilitiesForColumn(colNum);
+    // print(possibilities);
+    // print(remainingNumbers);
+    //TODO: Extract this to a function
+    remainingNumbers.forEach(num => {
+      let count = 0;
+      let position = 0;
+      possibilities.forEach((d, i) => {
+        if (d && d.includes(num)) {
+          position = i;
+          count++;
+        }
+      });
+      // print("count for number " + num + "is " + count);
+      if (count == 1) {
+        print(
+          "found only one possibility for number " +
+            num +
+            " in column " +
+            colNum +
+            " at position " +
+            position
+        );
+        fillNumberInSudoku(num, position, colNum);
+      }
+    });
+  });
+
+  remainingRows.forEach(rowNum => {
+    possibilities = getPossibilitiesForColumn(rowNum);
+    // print(possibilities);
+    // print(remainingNumbers);
+    //TODO: Extract this to a function
+    remainingNumbers.forEach(num => {
+      let count = 0;
+      let position = 0;
+      possibilities.forEach((d, i) => {
+        if (d && d.includes(num)) {
+          position = i;
+          count++;
+        }
+      });
+      // print("count for number " + num + "is " + count);
+      if (count == 1) {
+        print(
+          "found only one possibility for number " +
+            num +
+            " in row " +
+            rowNum +
+            " at position " +
+            position
+        );
+        fillNumberInSudoku(num, rowNum, position);
+      }
+    });
+  });
+
+  //TODO: Add logic for grids
 };
 
 //Helper Function
@@ -620,6 +773,8 @@ function doOneCycle() {
   checkForRemainingNumbersInAllRows();
   checkForRemainingNumbersInAllColumns();
   checkForNumbersInGridIfColumnHasRemainingNumsInSameGrid();
+  solveNakedSubset();
+  checkForSinglePossibilityAfterEverything();
   // parseRowColumnMapsToFillIntersections();
 }
 
@@ -1526,96 +1681,3 @@ solveSudoku();
 //     }
 //   });
 // };
-
-const removeFromUnitPossibility = (rowOrColumn, rowOrColNum, elements) => {
-  console.log(
-    "solving naked subset for " +
-      rowOrColumn +
-      " num " +
-      rowOrColNum +
-      ", removing elements " +
-      elements
-  );
-  if (rowOrColumn == ROW) {
-    _getUnitsApplicableForRow(rowOrColNum).forEach(d => {
-      if (unitPossibilitiesMap[d]) {
-        if (!arrayEquals(unitPossibilitiesMap[d], elements)) {
-          // print(
-          //   "intial unit possibility map for " +
-          //     d +
-          //     " " +
-          //     unitPossibilitiesMap[d]
-          // );
-          unitPossibilitiesMap[d] = removeElementsFromArray(
-            unitPossibilitiesMap[d],
-            elements
-          );
-          // print(
-          //   "updated unit possibility map for " +
-          //     d +
-          //     " " +
-          //     unitPossibilitiesMap[d]
-          // );
-        }
-      }
-    });
-  } else if (rowOrColumn == COLUMN) {
-    _getUnitsApplicableForColumn(rowOrColNum).forEach(d => {
-      if (unitPossibilitiesMap[d]) {
-        if (!arrayEquals(unitPossibilitiesMap[d], elements)) {
-          // print(
-          //   "intial unit possibility map for " +
-          //     d +
-          //     " " +
-          //     unitPossibilitiesMap[d]
-          // );
-          unitPossibilitiesMap[d] = removeElementsFromArray(
-            unitPossibilitiesMap[d],
-            elements
-          );
-          // print(
-          //   "updated unit possibility map for " +
-          //     d +
-          //     " " +
-          //     unitPossibilitiesMap[d]
-          // );
-        }
-      }
-    });
-  }
-};
-
-// naked subset
-const solveNakedSubset = () => {
-  remainingRows.forEach(d => {
-    // printPossibilitiesForNumbersInSameRow(d);
-    let arr = getPossibilitiesForRow(d);
-
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i].length == 2) {
-        for (let j = i + 1; j < arr.length; j++) {
-          if (arrayEquals(arr[i], arr[j])) {
-            removeFromUnitPossibility(ROW, d, arr[i]);
-          }
-        }
-      }
-    }
-  });
-
-  remainingColumns.forEach(d => {
-    // printPossibilitiesForNumbersInSameRow(d);
-    let arr = getPossibilitiesForColumn(d);
-
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i].length == 2) {
-        for (let j = i + 1; j < arr.length; j++) {
-          if (arrayEquals(arr[i], arr[j])) {
-            removeFromUnitPossibility(COLUMN, d, arr[i]);
-          }
-        }
-      }
-    }
-  });
-};
-
-solveNakedSubset();
