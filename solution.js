@@ -1,4 +1,53 @@
+// cmd + k + 0
+// cmd + k + j
+
 let DATA = require("./question.js");
+
+let rowMaps = {
+  "1": {},
+  "2": {},
+  "3": {},
+  "4": {},
+  "5": {},
+  "6": {},
+  "7": {},
+  "8": {},
+  "9": {},
+  clear: function() {
+    (rowMaps["1"] = {}),
+      (rowMaps["2"] = {}),
+      (rowMaps["3"] = {}),
+      (rowMaps["4"] = {}),
+      (rowMaps["5"] = {}),
+      (rowMaps["6"] = {}),
+      (rowMaps["7"] = {}),
+      (rowMaps["8"] = {}),
+      (rowMaps["9"] = {});
+  }
+};
+
+let columnMaps = {
+  "1": {},
+  "2": {},
+  "3": {},
+  "4": {},
+  "5": {},
+  "6": {},
+  "7": {},
+  "8": {},
+  "9": {},
+  clear: function() {
+    (columnMaps["1"] = {}),
+      (columnMaps["2"] = {}),
+      (columnMaps["3"] = {}),
+      (columnMaps["4"] = {}),
+      (columnMaps["5"] = {}),
+      (columnMaps["6"] = {}),
+      (columnMaps["7"] = {}),
+      (columnMaps["8"] = {}),
+      (columnMaps["9"] = {});
+  }
+};
 
 const ROW = "ROW";
 const COLUMN = "COLUMN";
@@ -13,6 +62,11 @@ let remainingGrids = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 // To trigger a new cycle of row/column/grid checking whenever this count decreases
 let noOfRemainingElementsToFill;
+
+let unitPossibilitiesMap = {};
+let rowPossibilitiesMap = {};
+let columnPossibilitiesMap = {};
+let gridPossibilitiesMap = {};
 
 // To track the number of spaces left to fill by each number
 // When this is "1", fill the last space to be filled by that number
@@ -68,8 +122,29 @@ let gridCount = {
   "8": 9
 };
 
+const print = str => console.log(str);
+
 function removeElementsFromArray(arr, elements) {
   return arr.filter(num => !elements.includes(num));
+}
+
+function arrayEquals(a, b) {
+  if (
+    Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length > 0 &&
+    a.length == b.length
+  ) {
+    let equals = true;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        equals = false;
+        break;
+      }
+    }
+    return equals;
+  }
+  return false;
 }
 
 const getRowValues = rowNum => {
@@ -89,15 +164,15 @@ const getGridValues = gridNum => {
 
   if (gridNum < 3) {
     [0, 1, 2].forEach(d => {
-      getRowValuesForAGrid(d, gridNum, arr);
+      _getRowValuesForAGrid(d, gridNum, arr);
     });
   } else if (gridNum < 6) {
     [3, 4, 5].forEach(d => {
-      getRowValuesForAGrid(d, gridNum, arr);
+      _getRowValuesForAGrid(d, gridNum, arr);
     });
   } else if (gridNum < 9) {
     [6, 7, 8].forEach(d => {
-      getRowValuesForAGrid(d, gridNum, arr);
+      _getRowValuesForAGrid(d, gridNum, arr);
     });
   }
   return arr.flat();
@@ -148,7 +223,7 @@ const getEmptyPositionsFromGrid = gridNum => {
   return arr;
 };
 
-const initializeNumberCount = () => {
+const _initializeNumberCount = () => {
   // This will initialize the number count based on the given question
 
   // Adding 0 to the numberCount to avoid checking in the below
@@ -166,7 +241,7 @@ const initializeNumberCount = () => {
   delete numberCount["0"];
 };
 
-const initializeRowCount = () => {
+const _initializeRowCount = () => {
   // This will initialize the row count based on the given question
 
   DATA.forEach((row, rowNum) => {
@@ -178,7 +253,7 @@ const initializeRowCount = () => {
   });
 };
 
-const initializeColumnCount = () => {
+const _initializeColumnCount = () => {
   [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(colNum => {
     getColumnValues(colNum).forEach(num => {
       if (num !== 0) {
@@ -188,7 +263,7 @@ const initializeColumnCount = () => {
   });
 };
 
-const initializeGridCount = () => {
+const _initializeGridCount = () => {
   [0, 1, 2, 3, 4, 5, 6, 7, 8].forEach(gridNum => {
     getGridValues(gridNum).forEach(num => {
       if (num !== 0) {
@@ -198,7 +273,7 @@ const initializeGridCount = () => {
   });
 };
 
-const initializeRemainingNoOfElements = () => {
+const _initializeRemainingNoOfElements = () => {
   let sum = 0;
   Object.entries(numberCount).forEach(([key, value]) => {
     sum += value;
@@ -206,16 +281,227 @@ const initializeRemainingNoOfElements = () => {
   noOfRemainingElementsToFill = sum;
 };
 
+const _initializeUnitPossibilitiesMap = () => {
+  for (let i = 0; i < 81; i++) {
+    unitPossibilitiesMap[i] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  }
+
+  // for (let i = 0; i < 9; i++) {
+  //   for (let j = 0; j < 9; j++) {
+  //     if (DATA[i][j] != "0") {
+  //       // updatePossibilitiesMaps(i, j, DATA[i][j]);
+  //       delete unitPossibilitiesMap[getUnitNumForRowColumnNum(i, j)];
+  //     }
+  //   }
+  // }
+};
+
+const _initializeRowPossibilitiesMap = () => {
+  for (let i = 0; i < 9; i++) {
+    rowPossibilitiesMap[i] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  }
+
+  remainingRows.forEach(rowNum => {
+    rowValues = getRowValues(rowNum);
+    rowPossibilitiesMap[rowNum] = removeElementsFromArray(
+      rowPossibilitiesMap[rowNum],
+      rowValues
+    );
+  });
+};
+
+const _initializeColumnPossibilitiesMap = () => {
+  for (let i = 0; i < 9; i++) {
+    columnPossibilitiesMap[i] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  }
+
+  remainingColumns.forEach(colNum => {
+    columnValues = getColumnValues(colNum);
+    columnPossibilitiesMap[colNum] = removeElementsFromArray(
+      columnPossibilitiesMap[colNum],
+      columnValues
+    );
+  });
+};
+
+const _initializeGridPossibilitiesMap = () => {
+  for (let i = 0; i < 9; i++) {
+    gridPossibilitiesMap[i] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  }
+
+  remainingGrids.forEach(gridNum => {
+    gridValues = getGridValues(gridNum);
+    gridPossibilitiesMap[gridNum] = removeElementsFromArray(
+      gridPossibilitiesMap[gridNum],
+      gridValues
+    );
+  });
+};
+
 const initializeSetup = () => {
-  initializeNumberCount();
-  initializeRowCount();
-  initializeColumnCount();
-  initializeGridCount();
-  initializeRemainingNoOfElements();
+  _initializeNumberCount();
+  _initializeRowCount();
+  _initializeColumnCount();
+  _initializeGridCount();
+  _initializeRemainingNoOfElements();
+
+  _initializeUnitPossibilitiesMap();
+  _initializeRowPossibilitiesMap();
+  _initializeColumnPossibilitiesMap();
+  _initializeGridPossibilitiesMap();
+};
+
+const getUnitNumForRowColumnNum = (rowNum, colNum) => {
+  return rowNum * 9 + colNum;
+};
+
+const _getUnitsApplicableForRow = rowNum => {
+  //rowNum 0 should give 0-8
+  //rowNum 1 should give 9-17
+
+  if (rowNum > 8) throw new Error("Invalid rowNum. Can't be greater than 8");
+  let arr = [];
+  let i = 9 * rowNum;
+  while (arr.length < 9) {
+    arr.push(i++);
+  }
+  return arr;
+};
+
+const _getUnitsApplicableForColumn = colNum => {
+  // colNum 0 should give [0,9,18 .... 72]
+  // colNum 8 should give [8,17,26 .... 80]
+  if (colNum > 8) throw new Error("Invalid colNum. Can't be greater than 8");
+  let arr = [];
+  let current = colNum;
+  while (arr.length < 9) {
+    arr.push(current);
+    current += 9;
+  }
+  return arr;
+};
+
+const _getUnitsApplicableForGrid = gridNum => {
+  if (gridNum > 8) throw new Error("Invalid gridNum. Can't be greater than 8");
+  let result;
+  //hardcoding. to be removed
+  switch (gridNum) {
+    case 0:
+      result = [0, 1, 2, 9, 10, 11, 18, 19, 20];
+      break;
+    case 1:
+      result = [3, 4, 5, 12, 13, 14, 21, 22, 23];
+      break;
+    case 2:
+      result = [6, 7, 8, 15, 16, 17, 24, 25, 26];
+      break;
+    case 3:
+      result = [27, 28, 29, 36, 37, 38, 45, 46, 47];
+      break;
+    case 4:
+      result = [30, 31, 32, 39, 40, 41, 48, 49, 50];
+      break;
+    case 5:
+      result = [33, 34, 35, 42, 43, 44, 51, 52, 53];
+      break;
+    case 6:
+      result = [54, 55, 56, 63, 64, 65, 72, 73, 74];
+      break;
+    case 7:
+      result = [57, 58, 59, 66, 67, 68, 75, 76, 77];
+      break;
+    case 8:
+      result = [60, 61, 62, 69, 70, 71, 78, 79, 80];
+      break;
+  }
+  return result;
+};
+
+const getPossibilitiesForRow = rowNum => {
+  let arr = [];
+  _getUnitsApplicableForRow(rowNum).forEach(d => {
+    if (unitPossibilitiesMap[d]) {
+      arr.push(unitPossibilitiesMap[d]);
+    } else {
+      arr.push([]);
+    }
+  });
+  return arr;
+};
+
+const getPossibilitiesForColumn = colNum => {
+  let arr = [];
+  _getUnitsApplicableForColumn(colNum).forEach(d => {
+    if (unitPossibilitiesMap[d]) {
+      arr.push(unitPossibilitiesMap[d]);
+    } else {
+      arr.push([]);
+    }
+  });
+  return arr;
+};
+
+const removeNumberFromUnitMap = (num, unitNum) => {
+  if (unitPossibilitiesMap[unitNum]) {
+    unitPossibilitiesMap[
+      unitNum
+    ] = removeElementsFromArray(unitPossibilitiesMap[unitNum], [num]);
+  }
+};
+
+const updateUnitPossibilitiesMap = (num, rowNum, colNum) => {
+  delete unitPossibilitiesMap[getUnitNumForRowColumnNum(rowNum, colNum)];
+
+  //remove the number as a possibility from all units in that row
+  _getUnitsApplicableForRow(rowNum).forEach(unit => {
+    removeNumberFromUnitMap(num, unit);
+  });
+
+  //remove the number as possibility from all units in that columns
+  _getUnitsApplicableForColumn(colNum).forEach(unit => {
+    removeNumberFromUnitMap(num, unit);
+  });
+
+  //remove the number as possibility from all units in the same grid
+  _getUnitsApplicableForGrid(
+    getGridNumberFromRowColumnNumbers(rowNum, colNum)
+  ).forEach(unit => {
+    removeNumberFromUnitMap(num, unit);
+  });
+};
+
+const updateRowPossibilitiesMap = (num, rowNum) => {
+  rowPossibilitiesMap[rowNum] = removeElementsFromArray(
+    rowPossibilitiesMap[rowNum],
+    [num]
+  );
+};
+
+const updateColumnPossibilitiesMap = (num, colNum) => {
+  columnPossibilitiesMap[
+    colNum
+  ] = removeElementsFromArray(columnPossibilitiesMap[colNum], [num]);
+};
+
+const updateGridPossibilitiesMap = (num, gridNum) => {
+  gridPossibilitiesMap[gridNum] = removeElementsFromArray(
+    gridPossibilitiesMap[gridNum],
+    [num]
+  );
+};
+
+const updatePossibilitiesMaps = (num, rowNum, colNum) => {
+  updateUnitPossibilitiesMap(num, rowNum, colNum);
+  updateRowPossibilitiesMap(num, rowNum);
+  updateColumnPossibilitiesMap(num, colNum);
+  updateGridPossibilitiesMap(
+    num,
+    getGridNumberFromRowColumnNumbers(rowNum, colNum)
+  );
 };
 
 //Helper Function
-const getRowValuesForAGrid = (rowNum, gridNum, arr) => {
+const _getRowValuesForAGrid = (rowNum, gridNum, arr) => {
   let arrValues = getRowValues(rowNum);
   if (gridNum % 3 === 0) {
     arr.push(arrValues.slice(0, 3));
@@ -271,14 +557,11 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
 
   if (DATA[rowNum][colNum] === 0) {
     DATA[rowNum][colNum] = num;
+    updatePossibilitiesMaps(num, rowNum, colNum);
     console.log(`\nfilled number ${num} in row ${rowNum}, column ${colNum}`);
     // console.log(DATA);
     console.log(
-      `before counts are number: ${numberCount[num]}, row: ${
-        rowCount[rowNum]
-      }, column: ${columnCount[colNum]}, grid: ${
-        gridCount[currentGridNum]
-      }, remainingNoOfElements: ${noOfRemainingElementsToFill}, remainingRows: ${remainingRows}, remainingColumns: ${remainingColumns}, remainingGrids: ${remainingGrids}`
+      `before counts are number: ${numberCount[num]}, row: ${rowCount[rowNum]}, column: ${columnCount[colNum]}, grid: ${gridCount[currentGridNum]}, remainingNoOfElements: ${noOfRemainingElementsToFill}, remainingRows: ${remainingRows}, remainingColumns: ${remainingColumns}, remainingGrids: ${remainingGrids}`
     );
 
     numberCount[num]--;
@@ -288,11 +571,7 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
     noOfRemainingElementsToFill--;
 
     console.log(
-      `after counts are number: ${numberCount[num]}, row ${
-        rowCount[rowNum]
-      }, column ${columnCount[colNum]}, grid: ${
-        gridCount[currentGridNum]
-      }, remaining: ${noOfRemainingElementsToFill}, remainingRows: ${remainingRows}, remainingColumns: ${remainingColumns}, remainingGrids: ${remainingGrids}`
+      `after counts are number: ${numberCount[num]}, row ${rowCount[rowNum]}, column ${columnCount[colNum]}, grid: ${gridCount[currentGridNum]}, remaining: ${noOfRemainingElementsToFill}, remainingRows: ${remainingRows}, remainingColumns: ${remainingColumns}, remainingGrids: ${remainingGrids}`
     );
 
     if (numberCount[num] === 1) {
@@ -335,12 +614,13 @@ const fillNumberInSudoku = (num, rowNum, colNum) => {
 };
 
 function doOneCycle() {
-  checkAllRowsForRemainingNumbers();
-  checkAllColumnsForRemainingNumbers();
-  checkAllGridsForRemainingNumbers();
+  _checkAllRowsForRemainingNumbers();
+  _checkAllColumnsForRemainingNumbers();
+  _checkAllGridsForRemainingNumbers();
   checkForRemainingNumbersInAllRows();
   checkForRemainingNumbersInAllColumns();
   checkForNumbersInGridIfColumnHasRemainingNumsInSameGrid();
+  // parseRowColumnMapsToFillIntersections();
 }
 
 const solveSudoku = () => {
@@ -380,7 +660,7 @@ const getPossibleGridNumbersFromColumnNumber = colNum => {
   }
 };
 
-const helper1 = num => {
+const _helper1 = num => {
   if ([0, 3, 6].includes(num)) {
     return [0, 1, 2];
   } else if ([1, 4, 7].includes(num)) {
@@ -390,7 +670,7 @@ const helper1 = num => {
   }
 };
 
-const helper2 = num => {
+const _helper2 = num => {
   if ([0, 3, 6].includes(num)) {
     return [0, 3, 6];
   } else if ([1, 4, 7].includes(num)) {
@@ -401,7 +681,7 @@ const helper2 = num => {
 };
 
 const getPossibleRowNumbersFromGridNumber = gridNum => {
-  return helper1(gridNum);
+  return _helper1(gridNum);
 };
 
 const getPossibleColumnNumbersFromGridNumber = gridNum => {
@@ -415,11 +695,11 @@ const getPossibleColumnNumbersFromGridNumber = gridNum => {
 };
 
 const getNumbersToRemoveBasedOnRow = rowNum => {
-  return helper1(rowNum);
+  return _helper1(rowNum);
 };
 
 const getNumbersToRemoveBasedOnColumn = colNum => {
-  return helper2(colNum);
+  return _helper2(colNum);
 };
 
 const getPossibleRowsAndColumnsFromGridNumber = gridNum => {
@@ -491,6 +771,8 @@ const checkInRow = (rowNum, num) => {
     // Fill the number in Sudoku if there is only one possibility
     if (emptyPositions.length == 1) {
       fillNumberInSudoku(num, rowNum, emptyPositions[0]);
+    } else if (emptyPositions.length === 2) {
+      pushNumberToRowMaps(num, rowNum, emptyPositions);
     }
   }
 };
@@ -534,6 +816,8 @@ const checkInColumn = (colNum, num) => {
     // Fill the number in Sudoku if there is only one possibility
     if (emptyPositions.length == 1) {
       fillNumberInSudoku(num, emptyPositions[0], colNum);
+    } else if (emptyPositions.length === 2) {
+      pushNumberToColumnMaps(num, colNum, emptyPositions);
     }
   }
 };
@@ -582,7 +866,7 @@ const checkInGrid = (gridNum, num) => {
   }
 };
 
-const checkAllRowsForRemainingNumbers = () => {
+const _checkAllRowsForRemainingNumbers = () => {
   console.log("\nchecking all rows");
   remainingNumbers.forEach(num => {
     remainingRows.forEach(rowNum => {
@@ -591,7 +875,7 @@ const checkAllRowsForRemainingNumbers = () => {
   });
 };
 
-const checkAllColumnsForRemainingNumbers = () => {
+const _checkAllColumnsForRemainingNumbers = () => {
   console.log("\nchecking all columns");
   remainingNumbers.forEach(num => {
     remainingColumns.forEach(colNum => {
@@ -600,7 +884,7 @@ const checkAllColumnsForRemainingNumbers = () => {
   });
 };
 
-const checkAllGridsForRemainingNumbers = () => {
+const _checkAllGridsForRemainingNumbers = () => {
   console.log("\nchecking all grids");
   remainingNumbers.forEach(num => {
     remainingGrids.forEach(gridNum => {
@@ -1024,6 +1308,79 @@ const ifNumberPossibleAtAPositionInGrid = (num, gridNum, posNum) => {
   }
   return true;
 };
+
+function pushNumberToRowMaps(num, rowNum, emptyPositions) {
+  console.log(
+    "number " +
+      num +
+      " has two possibilities in row " +
+      rowNum +
+      "->" +
+      emptyPositions
+  );
+
+  rowMaps[num][rowNum] = emptyPositions;
+}
+
+function pushNumberToColumnMaps(num, colNum, emptyPositions) {
+  console.log(
+    "number " +
+      num +
+      " has two possibilities in column " +
+      colNum +
+      "->" +
+      emptyPositions
+  );
+
+  columnMaps[num][colNum] = emptyPositions;
+}
+
+// After every iteration we check if a row and column has intersections,
+// say 2 is only possible in Row 2 at position 2 and 4
+// 2 is possible in at Column 2 at position 2 and 8.
+// Now, 2 has to be at the intersection of row 2 and column 2.
+// After this is done, we clear the maps
+function parseRowColumnMapsToFillIntersections() {
+  rowMapsKeys = Object.keys(rowMaps);
+
+  rowMapsKeys.forEach(num => {
+    currentRowPositionsForNum = rowMaps[num];
+    currentColumnPositionsForNum = columnMaps[num];
+
+    if (
+      currentRowPositionsForNum != undefined &&
+      currentColumnPositionsForNum != undefined
+    ) {
+      console.log(
+        num,
+        ",",
+        currentRowPositionsForNum,
+        ",",
+        currentColumnPositionsForNum
+      );
+
+      commonForRowAndColumn = Object.keys(currentRowPositionsForNum).filter(d =>
+        Object.keys(currentColumnPositionsForNum).includes(d)
+      );
+
+      if (commonForRowAndColumn.length > 0) {
+        console.log(commonForRowAndColumn);
+        commonForRowAndColumn.forEach(d => {
+          element = currentRowPositionsForNum[d].filter(d1 =>
+            currentColumnPositionsForNum[d].includes(d1)
+          );
+          if (element.length == 1) {
+            console.log(num, d, element[0]);
+            // fillNumberInSudoku(num, d, element[0]);
+          }
+        });
+      }
+    }
+  });
+
+  rowMaps.clear();
+  columnMaps.clear();
+}
 
 const checkEverywhereForRemainingNumbers = () => {
   remainingNumbers.forEach(num => {
