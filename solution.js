@@ -1052,67 +1052,28 @@ function printFinalStats() {
   );
 }
 
-initializeSetup();
-solveSudoku();
+function guessGame() {
+  if (noOfRemainingElementsToFill != 0) {
+    console.log("logic is not good enough. Guessing game begins");
 
-if (noOfRemainingElementsToFill != 0) {
-  console.log("logic is not good enough. Guessing game begins");
+    let oldData = JSON.parse(JSON.stringify(DATA));
+    let oldremainingNumbers = new Set(remainingNumbers);
+    let oldremainingRows = JSON.parse(JSON.stringify(remainingRows));
+    let oldremainingColumns = JSON.parse(JSON.stringify(remainingColumns));
+    let oldremainingGrids = JSON.parse(JSON.stringify(remainingGrids));
+    let oldnumberCount = JSON.parse(JSON.stringify(numberCount));
+    let oldrowCount = JSON.parse(JSON.stringify(rowCount));
+    let oldcolumnCount = JSON.parse(JSON.stringify(columnCount));
+    let oldgridCount = JSON.parse(JSON.stringify(gridCount));
+    let oldnoOfRemainingElementsToFill = noOfRemainingElementsToFill;
 
-  let oldData = JSON.parse(JSON.stringify(DATA));
-  let oldremainingNumbers = new Set(remainingNumbers);
-  let oldremainingRows = JSON.parse(JSON.stringify(remainingRows));
-  let oldremainingColumns = JSON.parse(JSON.stringify(remainingColumns));
-  let oldremainingGrids = JSON.parse(JSON.stringify(remainingGrids));
-  let oldnumberCount = JSON.parse(JSON.stringify(numberCount));
-  let oldrowCount = JSON.parse(JSON.stringify(rowCount));
-  let oldcolumnCount = JSON.parse(JSON.stringify(columnCount));
-  let oldgridCount = JSON.parse(JSON.stringify(gridCount));
-  let oldnoOfRemainingElementsToFill = noOfRemainingElementsToFill;
-
-  // guessing game
-  let guessGrid;
-  remainingGrids.forEach(d => {
-    if (gridCount[d] == 2) {
-      guessGrid = d;
-    }
-  });
-  console.log(guessGrid);
-
-  let vals = getRemainingValuesToFillInAGrid(guessGrid);
-  console.log(vals);
-
-  let poss = getEmptyPositionsFromGrid(guessGrid);
-  console.log(poss);
-
-  let currentCombination = [vals[0], poss[0]];
-  let nextCombination = [vals[0], poss[1]];
-
-  let [rowNum, colNum] = getRowAndColumnNumFromGridNumAndPosition(
-    guessGrid,
-    currentCombination[1]
-  );
-
-  console.log(rowNum, colNum);
-
-  fillNumberInSudoku(currentCombination[0], rowNum, colNum);
-  solveSudoku();
-
-  if (noOfRemainingElementsToFill == 0) {
-    console.log("success with combo 1");
-  } else {
-    console.log("failure with combination 1");
-    DATA = JSON.parse(JSON.stringify(oldData));
-    remainingNumbers = new Set(oldremainingNumbers);
-    remainingRows = JSON.parse(JSON.stringify(oldremainingRows));
-    remainingColumns = JSON.parse(JSON.stringify(oldremainingColumns));
-    remainingGrids = JSON.parse(JSON.stringify(oldremainingGrids));
-    numberCount = JSON.parse(JSON.stringify(oldnumberCount));
-    rowCount = JSON.parse(JSON.stringify(oldrowCount));
-    columnCount = JSON.parse(JSON.stringify(oldcolumnCount));
-    gridCount = JSON.parse(JSON.stringify(oldgridCount));
-    noOfRemainingElementsToFill = oldnoOfRemainingElementsToFill;
-
-    console.log("trying with combination 2");
+    // guessing game
+    let guessGrid;
+    remainingGrids.forEach(d => {
+      if (gridCount[d] == 2) {
+        guessGrid = d;
+      }
+    });
     console.log(guessGrid);
 
     let vals = getRemainingValuesToFillInAGrid(guessGrid);
@@ -1121,20 +1082,183 @@ if (noOfRemainingElementsToFill != 0) {
     let poss = getEmptyPositionsFromGrid(guessGrid);
     console.log(poss);
 
+    let currentCombination = [vals[0], poss[0]];
+    let nextCombination = [vals[0], poss[1]];
+
     let [rowNum, colNum] = getRowAndColumnNumFromGridNumAndPosition(
       guessGrid,
-      nextCombination[1]
+      currentCombination[1]
     );
 
     console.log(rowNum, colNum);
 
-    fillNumberInSudoku(nextCombination[0], rowNum, colNum);
+    fillNumberInSudoku(currentCombination[0], rowNum, colNum);
     solveSudoku();
 
     if (noOfRemainingElementsToFill == 0) {
-      console.log("success with the second combo");
+      console.log("success with combo 1");
+    } else {
+      console.log("failure with combination 1");
+      DATA = JSON.parse(JSON.stringify(oldData));
+      remainingNumbers = new Set(oldremainingNumbers);
+      remainingRows = JSON.parse(JSON.stringify(oldremainingRows));
+      remainingColumns = JSON.parse(JSON.stringify(oldremainingColumns));
+      remainingGrids = JSON.parse(JSON.stringify(oldremainingGrids));
+      numberCount = JSON.parse(JSON.stringify(oldnumberCount));
+      rowCount = JSON.parse(JSON.stringify(oldrowCount));
+      columnCount = JSON.parse(JSON.stringify(oldcolumnCount));
+      gridCount = JSON.parse(JSON.stringify(oldgridCount));
+      noOfRemainingElementsToFill = oldnoOfRemainingElementsToFill;
+
+      console.log("trying with combination 2");
+      console.log(guessGrid);
+
+      let vals = getRemainingValuesToFillInAGrid(guessGrid);
+      console.log(vals);
+
+      let poss = getEmptyPositionsFromGrid(guessGrid);
+      console.log(poss);
+
+      let [rowNum, colNum] = getRowAndColumnNumFromGridNumAndPosition(
+        guessGrid,
+        nextCombination[1]
+      );
+
+      console.log(rowNum, colNum);
+
+      fillNumberInSudoku(nextCombination[0], rowNum, colNum);
+      solveSudoku();
+
+      if (noOfRemainingElementsToFill == 0) {
+        console.log("success with the second combo");
+      }
+    }
+  } else {
+    console.log("success with logic");
+  }
+}
+
+const _initializeUnitPossibilitiesMapForFirstTime = () => {
+  for (let i = 0; i < 9; i++) {
+    for (let j = 0; j < 9; j++) {
+      if (DATA[i][j] != "0") {
+        // updatePossibilitiesMaps(DATA[i][j], i, j);
+        updateUnitPossibilitiesMap(DATA[i][j], i, j);
+      }
     }
   }
-} else {
-  console.log("success with logic");
-}
+};
+
+initializeSetup();
+_initializeUnitPossibilitiesMapForFirstTime();
+solveSudoku();
+// guessGame();
+// print(Object.keys(unitPossibilitiesMap));
+// print(Object.keys(unitPossibilitiesMap).length);
+// print(unitPossibilitiesMap);
+// print(rowPossibilitiesMap);
+// print(columnPossibilitiesMap);
+// print(gridPossibilitiesMap);
+
+// print(_getUnitsApplicableForGrid(0));
+
+// const printPossibilitiesForNumbersInSameRow = rowNum => {
+//   _getUnitsApplicableForRow(rowNum).forEach(d => {
+//     if (unitPossibilitiesMap[d]) {
+//       console.log(rowNum, d, unitPossibilitiesMap[d]);
+//     }
+//   });
+// };
+
+const removeFromUnitPossibility = (rowOrColumn, rowOrColNum, elements) => {
+  console.log(
+    "solving naked subset for " +
+      rowOrColumn +
+      " num " +
+      rowOrColNum +
+      ", removing elements " +
+      elements
+  );
+  if (rowOrColumn == ROW) {
+    _getUnitsApplicableForRow(rowOrColNum).forEach(d => {
+      if (unitPossibilitiesMap[d]) {
+        if (!arrayEquals(unitPossibilitiesMap[d], elements)) {
+          // print(
+          //   "intial unit possibility map for " +
+          //     d +
+          //     " " +
+          //     unitPossibilitiesMap[d]
+          // );
+          unitPossibilitiesMap[d] = removeElementsFromArray(
+            unitPossibilitiesMap[d],
+            elements
+          );
+          // print(
+          //   "updated unit possibility map for " +
+          //     d +
+          //     " " +
+          //     unitPossibilitiesMap[d]
+          // );
+        }
+      }
+    });
+  } else if (rowOrColumn == COLUMN) {
+    _getUnitsApplicableForColumn(rowOrColNum).forEach(d => {
+      if (unitPossibilitiesMap[d]) {
+        if (!arrayEquals(unitPossibilitiesMap[d], elements)) {
+          // print(
+          //   "intial unit possibility map for " +
+          //     d +
+          //     " " +
+          //     unitPossibilitiesMap[d]
+          // );
+          unitPossibilitiesMap[d] = removeElementsFromArray(
+            unitPossibilitiesMap[d],
+            elements
+          );
+          // print(
+          //   "updated unit possibility map for " +
+          //     d +
+          //     " " +
+          //     unitPossibilitiesMap[d]
+          // );
+        }
+      }
+    });
+  }
+};
+
+// naked subset
+const solveNakedSubset = () => {
+  remainingRows.forEach(d => {
+    // printPossibilitiesForNumbersInSameRow(d);
+    let arr = getPossibilitiesForRow(d);
+
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i].length == 2) {
+        for (let j = i + 1; j < arr.length; j++) {
+          if (arrayEquals(arr[i], arr[j])) {
+            removeFromUnitPossibility(ROW, d, arr[i]);
+          }
+        }
+      }
+    }
+  });
+
+  remainingColumns.forEach(d => {
+    // printPossibilitiesForNumbersInSameRow(d);
+    let arr = getPossibilitiesForColumn(d);
+
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i].length == 2) {
+        for (let j = i + 1; j < arr.length; j++) {
+          if (arrayEquals(arr[i], arr[j])) {
+            removeFromUnitPossibility(COLUMN, d, arr[i]);
+          }
+        }
+      }
+    }
+  });
+};
+
+solveNakedSubset();
