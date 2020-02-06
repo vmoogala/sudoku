@@ -4,6 +4,7 @@
 let DATA = require("./question.js");
 
 let rowMaps = {
+  "0": {},
   "1": {},
   "2": {},
   "3": {},
@@ -12,21 +13,21 @@ let rowMaps = {
   "6": {},
   "7": {},
   "8": {},
-  "9": {},
   clear: function() {
-    (rowMaps["1"] = {}),
+    (rowMaps["0"] = {}),
+      (rowMaps["1"] = {}),
       (rowMaps["2"] = {}),
       (rowMaps["3"] = {}),
       (rowMaps["4"] = {}),
       (rowMaps["5"] = {}),
       (rowMaps["6"] = {}),
       (rowMaps["7"] = {}),
-      (rowMaps["8"] = {}),
-      (rowMaps["9"] = {});
+      (rowMaps["8"] = {});
   }
 };
 
 let columnMaps = {
+  "0": {},
   "1": {},
   "2": {},
   "3": {},
@@ -37,6 +38,7 @@ let columnMaps = {
   "8": {},
   "9": {},
   clear: function() {
+    columnMaps["0"] = {};
     (columnMaps["1"] = {}),
       (columnMaps["2"] = {}),
       (columnMaps["3"] = {}),
@@ -44,8 +46,7 @@ let columnMaps = {
       (columnMaps["5"] = {}),
       (columnMaps["6"] = {}),
       (columnMaps["7"] = {}),
-      (columnMaps["8"] = {}),
-      (columnMaps["9"] = {});
+      (columnMaps["8"] = {});
   }
 };
 
@@ -775,7 +776,6 @@ function doOneCycle() {
   checkForNumbersInGridIfColumnHasRemainingNumsInSameGrid();
   solveNakedSubset();
   checkForSinglePossibilityAfterEverything();
-  // parseRowColumnMapsToFillIntersections();
 }
 
 const solveSudoku = () => {
@@ -1474,7 +1474,7 @@ function pushNumberToRowMaps(num, rowNum, emptyPositions) {
       emptyPositions
   );
 
-  rowMaps[num][rowNum] = emptyPositions;
+  rowMaps[rowNum][num] = emptyPositions;
 }
 
 function pushNumberToColumnMaps(num, colNum, emptyPositions) {
@@ -1487,54 +1487,7 @@ function pushNumberToColumnMaps(num, colNum, emptyPositions) {
       emptyPositions
   );
 
-  columnMaps[num][colNum] = emptyPositions;
-}
-
-// After every iteration we check if a row and column has intersections,
-// say 2 is only possible in Row 2 at position 2 and 4
-// 2 is possible in at Column 2 at position 2 and 8.
-// Now, 2 has to be at the intersection of row 2 and column 2.
-// After this is done, we clear the maps
-function parseRowColumnMapsToFillIntersections() {
-  rowMapsKeys = Object.keys(rowMaps);
-
-  rowMapsKeys.forEach(num => {
-    currentRowPositionsForNum = rowMaps[num];
-    currentColumnPositionsForNum = columnMaps[num];
-
-    if (
-      currentRowPositionsForNum != undefined &&
-      currentColumnPositionsForNum != undefined
-    ) {
-      console.log(
-        num,
-        ",",
-        currentRowPositionsForNum,
-        ",",
-        currentColumnPositionsForNum
-      );
-
-      commonForRowAndColumn = Object.keys(currentRowPositionsForNum).filter(d =>
-        Object.keys(currentColumnPositionsForNum).includes(d)
-      );
-
-      if (commonForRowAndColumn.length > 0) {
-        console.log(commonForRowAndColumn);
-        commonForRowAndColumn.forEach(d => {
-          element = currentRowPositionsForNum[d].filter(d1 =>
-            currentColumnPositionsForNum[d].includes(d1)
-          );
-          if (element.length == 1) {
-            console.log(num, d, element[0]);
-            // fillNumberInSudoku(num, d, element[0]);
-          }
-        });
-      }
-    }
-  });
-
-  rowMaps.clear();
-  columnMaps.clear();
+  columnMaps[colNum][num] = emptyPositions;
 }
 
 const checkEverywhereForRemainingNumbers = () => {
